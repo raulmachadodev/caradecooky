@@ -186,6 +186,43 @@
     font-family: 'Montserrat', sans-serif;
   }
 
+  /* CLASSE MESTRA: PREMIUM GLASS CARD */
+  .premium-glass-card {
+    @apply relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-card shadow-glow transition-all duration-300;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    isolation: isolate;
+  }
+
+  .premium-glass-card:hover {
+    @apply -translate-y-1.5 shadow-xl;
+    box-shadow: 0 20px 40px -10px hsl(var(--primary) / 0.15), var(--shadow-glow);
+    border-color: hsl(var(--primary) / 0.4);
+  }
+
+  /* Efeito Spotlight integrado */
+  .premium-glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      hsl(var(--secondary) / 0.15),
+      transparent 45%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .premium-glass-card:hover::before {
+    opacity: 1;
+  }
+  .premium-glass-card > * {
+    position: relative;
+    z-index: 2;
+  }
+
   .animate-shine-text {
     background: linear-gradient(
       to right,

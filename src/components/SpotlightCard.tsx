@@ -27,7 +27,7 @@ export function SpotlightCard({ children, className, as: Tag = "div" }: Spotligh
       ref={ref as React.RefObject<HTMLDivElement>}
       onMouseMove={handleMouseMove}
       className={cn(
-        "spotlight-card group relative rounded-2xl border border-border bg-gradient-card p-6 shadow-soft hover-lift",
+        "premium-glass-card p-6",
         className,
       )}
     >

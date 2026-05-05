@@ -1,4 +1,5 @@
 import { Award, ChefHat, Heart } from "lucide-react";
+import { SpotlightCard } from "./SpotlightCard";
 
 const items = [
   {
@@ -22,18 +23,16 @@ export function FeaturesStrip() {
   return (
     <section id="sobre" className="container py-16">
       <div className="grid gap-6 md:grid-cols-3">
-        {items.map((item) => (
-          <div
+          <SpotlightCard
             key={item.title}
-            className="flex flex-col items-center rounded-2xl border border-border bg-gradient-card p-6 text-center shadow-soft hover-lift"
+            className="flex flex-col items-center text-center"
           >
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-gold text-primary shadow-glow">
               <item.icon className="h-7 w-7" />
             </div>
             <h3 className="mb-2 font-display text-xl text-primary">{item.title}</h3>
             <p className="text-sm text-muted-foreground">{item.text}</p>
-          </div>
-        ))}
+          </SpotlightCard>
       </div>
     </section>
   );

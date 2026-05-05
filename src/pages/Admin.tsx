@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { SpotlightCard } from "@/components/SpotlightCard";
 import {
   Select,
   SelectContent,
@@ -219,9 +220,10 @@ const Admin = () => {
         ) : (
           <div className="grid gap-6">
             {filteredOrders.map((o) => (
-              <article
+              <SpotlightCard
                 key={o.id}
-                className="rounded-3xl border border-primary/50 bg-gradient-card shadow-glow ring-1 ring-primary/10 transition-all duration-300 hover-lift"
+                as="article"
+                className="p-0 overflow-hidden"
               >
                 <div className="p-6">
                   <div className="mb-6 flex flex-wrap items-start justify-between gap-4">

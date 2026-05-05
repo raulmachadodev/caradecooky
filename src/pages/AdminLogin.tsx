@@ -65,7 +65,7 @@ const AdminLogin = () => {
   return (
     <div className="relative flex min-h-screen items-center justify-center p-4">
       <AnimatedBackground />
-      <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 shadow-warm">
+      <div className="premium-glass-card w-full max-w-sm p-8">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 h-24 w-24 overflow-hidden rounded-full border-4 border-secondary/20 bg-background/50 p-1 shadow-soft animate-float">
             <img 
