@@ -221,12 +221,7 @@ const Admin = () => {
             {filteredOrders.map((o) => (
               <article
                 key={o.id}
-                className={cn(
-                  "rounded-3xl border transition-all duration-300",
-                  o.status === 'novo' 
-                    ? "border-primary/50 bg-gradient-card shadow-glow ring-1 ring-primary/20" 
-                    : "border-border bg-card/50 shadow-soft"
-                )}
+                className="rounded-3xl border border-primary/50 bg-gradient-card shadow-glow ring-1 ring-primary/10 transition-all duration-300 hover-lift"
               >
                 <div className="p-6">
                   <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
