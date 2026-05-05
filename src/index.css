@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Montserrat:wght@200;300;400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   CARA DE COOKY GOURMET — Design System
+   Paleta: chocolate, dourado e creme.
+   Todas as cores em HSL.
+   ============================================ */
+
+@layer base {
+  :root {
+    /* Base — fundo creme suave, texto chocolate escuro */
+    --background: 36 40% 96%;
+    --foreground: 25 45% 14%;
+
+    --card: 36 50% 99%;
+    --card-foreground: 25 45% 14%;
+
+    --popover: 36 50% 99%;
+    --popover-foreground: 25 45% 14%;
+
+    /* Primary — chocolate da marca */
+    --primary: 22 55% 22%;
+    --primary-foreground: 36 50% 97%;
+    --primary-glow: 22 60% 35%;
+
+    /* Secondary — dourado caramelo (do "GOURMET") */
+    --secondary: 38 65% 52%;
+    --secondary-foreground: 25 45% 14%;
+
+    /* Accent — laranja queimado (dos detalhes do cardápio) */
+    --accent: 28 78% 48%;
+    --accent-foreground: 36 50% 97%;
+
+    --muted: 36 25% 90%;
+    --muted-foreground: 25 20% 38%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 36 50% 97%;
+
+    --border: 30 30% 84%;
+    --input: 30 30% 84%;
+    --ring: 22 55% 22%;
+
+    --radius: 0.75rem;
+
+    /* Gradientes da marca */
+    --gradient-warm: linear-gradient(135deg, hsl(36 50% 97%) 0%, hsl(36 60% 93%) 100%);
+    --gradient-chocolate: linear-gradient(135deg, hsl(22 55% 22%) 0%, hsl(22 60% 32%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(38 70% 55%) 0%, hsl(28 78% 48%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(36 50% 99%) 0%, hsl(36 40% 95%) 100%);
+
+    /* Sombras quentes */
+    --shadow-warm: 0 10px 30px -10px hsl(22 55% 22% / 0.25);
+    --shadow-soft: 0 4px 16px -4px hsl(22 40% 30% / 0.15);
+    --shadow-glow: 0 0 40px hsl(38 65% 52% / 0.35);
+
+    /* Transições */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 36 40% 96%;
+    --sidebar-foreground: 25 45% 14%;
+    --sidebar-primary: 22 55% 22%;
+    --sidebar-primary-foreground: 36 50% 97%;
+    --sidebar-accent: 36 25% 90%;
+    --sidebar-accent-foreground: 25 45% 14%;
+    --sidebar-border: 30 30% 84%;
+    --sidebar-ring: 22 55% 22%;
+  }
+
+  .dark {
+    --background: 22 30% 10%;
+    --foreground: 36 40% 94%;
+    --card: 22 30% 13%;
+    --card-foreground: 36 40% 94%;
+    --popover: 22 30% 13%;
+    --popover-foreground: 36 40% 94%;
+    --primary: 38 65% 55%;
+    --primary-foreground: 22 40% 12%;
+    --primary-glow: 38 70% 65%;
+    --secondary: 22 35% 22%;
+    --secondary-foreground: 36 40% 94%;
+    --accent: 28 78% 52%;
+    --accent-foreground: 22 40% 12%;
+    --muted: 22 25% 18%;
+    --muted-foreground: 36 20% 70%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 36 40% 94%;
+    --border: 22 25% 22%;
+    --input: 22 25% 22%;
+    --ring: 38 65% 55%;
+    --sidebar-background: 22 30% 10%;
+    --sidebar-foreground: 36 40% 94%;
+    --sidebar-primary: 38 65% 55%;
+    --sidebar-primary-foreground: 22 40% 12%;
+    --sidebar-accent: 22 25% 18%;
+    --sidebar-accent-foreground: 36 40% 94%;
+    --sidebar-border: 22 25% 22%;
+    --sidebar-ring: 38 65% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+    @apply tracking-tight;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  /* Spotlight que segue o mouse — herdado do projeto CBLOW */
+  .spotlight-card {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .spotlight-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      hsl(var(--secondary) / 0.18),
+      transparent 45%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .spotlight-card:hover::before {
+    opacity: 1;
+  }
+  .spotlight-card > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-[1.02];
+  }
+
+  .hover-lift {
+    transition: var(--transition-smooth);
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-warm);
+  }
+
+  .font-logo {
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  .animate-shine-text {
+    background: linear-gradient(
+      to right,
+      hsl(38 70% 55%) 0%,
+      hsl(38 70% 55%) 40%,
+      hsl(36 100% 95%) 50%,
+      hsl(38 70% 55%) 60%,
+      hsl(38 70% 55%) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shine 3s linear infinite;
+  }
+
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .bg-gradient-warm { background: var(--gradient-warm); }
+  .bg-gradient-chocolate { background: var(--gradient-chocolate); }
+  .bg-gradient-gold { background: var(--gradient-gold); }
+  .bg-gradient-card { background: var(--gradient-card); }
+
+  .shadow-warm { box-shadow: var(--shadow-warm); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes coin-spin {
+  0% { transform: perspective(600px) rotateY(0deg); }
+  49.99% { transform: perspective(600px) rotateY(90deg); }
+  50% { transform: perspective(600px) rotateY(-90deg); }
+  100% { transform: perspective(600px) rotateY(0deg); }
+}
+
+@keyframes shine {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-fade-in-up { animation: fade-in-up 0.6s ease-out both; }
+.animate-coin-spin { animation: coin-spin 2.5s linear infinite; transform-style: preserve-3d; }
+
