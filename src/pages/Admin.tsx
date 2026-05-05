@@ -347,7 +347,7 @@ const Admin = () => {
                     );
                   })()}
                 </div>
-              </article>
+              </SpotlightCard>
             ))}
           </div>
         )}
