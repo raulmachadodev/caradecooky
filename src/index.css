@@ -117,6 +117,20 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
+  /* Efeito Glassmorphism Global para Cards */
+  .bg-card {
+    background-color: hsl(var(--card) / 0.75) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  .bg-popover {
+    background-color: hsl(var(--popover) / 0.85) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
   h1, h2, h3, h4 {
     font-family: 'Playfair Display', Georgia, serif;
     @apply tracking-tight;
