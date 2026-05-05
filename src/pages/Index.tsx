@@ -15,7 +15,7 @@ const Index = () => {
           <header className="mx-auto mb-12 flex max-w-2xl flex-col items-center text-center">
             <div className="mb-6 h-32 w-32 overflow-hidden rounded-full border-4 border-secondary/20 bg-background p-2 shadow-soft animate-float md:h-40 md:w-40">
               <img
-                src="/src/assets/logo-redondo-sem-fundo.png"
+                src="/logo.png"
                 alt="Logo Cara de Cooky"
                 className="h-full w-full object-contain animate-coin-spin drop-shadow-lg"
               />

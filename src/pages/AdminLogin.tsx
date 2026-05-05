@@ -58,7 +58,7 @@ const AdminLogin = () => {
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 h-24 w-24 overflow-hidden rounded-full border-4 border-secondary/20 bg-background/50 p-1 shadow-soft animate-float">
             <img 
-              src="/src/assets/logo-redondo-sem-fundo.png" 
+              src="/logo.png" 
               alt="Logo" 
               className="h-full w-full object-contain animate-coin-spin"
             />

@@ -1,6 +1,6 @@
 import { Sparkles } from "lucide-react";
-import logo from "@/assets/logo-cara-de-cooky.png";
-import mascote from "@/assets/mascote-cooky.png";
+const logo = "/logo-full.png";
+const mascote = "/mascote.png";
 
 export function Hero() {
   return (
