@@ -23,6 +23,7 @@ export function FeaturesStrip() {
   return (
     <section id="sobre" className="container py-16">
       <div className="grid gap-6 md:grid-cols-3">
+        {items.map((item) => (
           <SpotlightCard
             key={item.title}
             className="flex flex-col items-center text-center"
@@ -33,6 +34,7 @@ export function FeaturesStrip() {
             <h3 className="mb-2 font-display text-xl text-primary">{item.title}</h3>
             <p className="text-sm text-muted-foreground">{item.text}</p>
           </SpotlightCard>
+        ))}
       </div>
     </section>
   );
