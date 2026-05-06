@@ -14,7 +14,7 @@ export function SiteHeader() {
         <div className="flex flex-1 items-center justify-start">
           <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             <img 
-              src="/src/assets/logo-redondo-sem-fundo.png" 
+              src="/logo.png" 
               alt="Logo" 
               className="h-10 w-10 object-contain drop-shadow-md"
             />

@@ -5,8 +5,17 @@ export function SiteFooter() {
     <footer id="contato" className="mt-24 border-t border-border bg-gradient-chocolate text-primary-foreground">
       <div className="container grid gap-8 py-12 md:grid-cols-3">
         <div>
-          <h3 className="mb-3 font-display text-2xl text-secondary">Cara de Cooky</h3>
-          <p className="text-sm text-primary-foreground/80">
+          <div className="mb-4 flex items-center gap-3">
+            <img 
+              src="/logo.png" 
+              alt="Logo" 
+              className="h-10 w-10 object-contain rounded-full shadow-glow"
+            />
+            <h3 className="font-logo text-xl font-medium uppercase tracking-[0.2em] animate-shine-text">
+              Cara de Cooky
+            </h3>
+          </div>
+          <p className="max-w-xs text-sm text-primary-foreground/80">
             Cookies gourmet artesanais. Cada mordida, uma experiência inesquecível.
           </p>
         </div>
@@ -40,10 +49,15 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-primary-foreground/10 py-4 text-center text-xs text-primary-foreground/60">
-        <span className="inline-flex items-center gap-1">
-          Feito com <Heart className="h-3 w-3 fill-secondary text-secondary" /> pela Cara de Cooky
-        </span>
+      <div className="border-t border-primary-foreground/10 py-6 text-center text-xs text-primary-foreground/60">
+        <div className="flex flex-col items-center gap-2">
+          <span className="inline-flex items-center gap-1">
+            Feito com <Heart className="h-3 w-3 fill-secondary text-secondary" /> pela Cara de Cooky
+          </span>
+          <p className="mt-1">
+            © 2024 Cara de Cooky Gourmet® · Todos os direitos reservados.
+          </p>
+        </div>
       </div>
     </footer>
   );
