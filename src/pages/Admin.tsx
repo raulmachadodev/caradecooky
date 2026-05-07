@@ -247,7 +247,7 @@ const OrderCard = memo(({ o, changeStatus, deleteOrder, sendWhatsAppConfirmation
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground font-medium">Data:</span>
-                      <span className="font-bold text-primary">{new Date(o.delivery_date).toLocaleDateString("pt-BR")}</span>
+                      <span className="font-bold text-primary">{o.delivery_date.split('-').reverse().join('/')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground font-medium">Período:</span>

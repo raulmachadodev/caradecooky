@@ -191,7 +191,7 @@ export default function TrackOrder() {
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   <div className="rounded-2xl bg-secondary/5 p-4 border border-secondary/10">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Entrega prevista</p>
-                    <p className="font-bold text-primary">{new Date(order.delivery_date).toLocaleDateString("pt-BR")}</p>
+                    <p className="font-bold text-primary">{order.delivery_date.split('-').reverse().join('/')}</p>
                   </div>
                   <div className="rounded-2xl bg-secondary/5 p-4 border border-secondary/10">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Período</p>
@@ -200,16 +200,16 @@ export default function TrackOrder() {
                 </div>
 
                   <div className="flex flex-col gap-3">
-                    <Button asChild className="h-14 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-lg gap-3 shadow-soft hover:scale-[1.02] transition-transform">
+                    <Button asChild className="h-14 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black gap-3 shadow-soft hover:scale-[1.02] transition-transform">
                       <a href="https://wa.me/5543988100558" target="_blank" rel="noopener noreferrer">
-                        <MessageCircle className="h-6 w-6" />
-                        Dúvidas? Chame no WhatsApp
+                        <MessageCircle className="h-6 w-6 shrink-0" />
+                        <span className="text-sm sm:text-lg">Falar no WhatsApp</span>
                       </a>
                     </Button>
-                    <Button asChild variant="outline" className="h-14 rounded-2xl border-primary/20 hover:bg-primary/5 text-primary font-black text-lg gap-3 shadow-soft hover:scale-[1.02] transition-transform">
+                    <Button asChild variant="outline" className="h-14 rounded-2xl border-primary/20 hover:bg-primary/5 text-primary font-black gap-3 shadow-soft hover:scale-[1.02] transition-transform">
                       <a href="https://instagram.com/caradecooky" target="_blank" rel="noopener noreferrer">
-                        <Instagram className="h-6 w-6" />
-                        Siga no Instagram
+                        <Instagram className="h-6 w-6 shrink-0" />
+                        <span className="text-sm sm:text-lg">Siga-nos no Instagram</span>
                       </a>
                     </Button>
                     <Button variant="ghost" asChild className="h-12 rounded-xl gap-2 text-muted-foreground hover:text-primary">
