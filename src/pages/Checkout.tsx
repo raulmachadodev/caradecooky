@@ -45,6 +45,7 @@ const checkoutSchema = z.object({
   delivery_date: z.string().min(1, "Escolha a data"),
   delivery_time: z.string().min(1, "Escolha o período"),
   payment_method: z.enum(["pix", "credito", "debito", "dinheiro"]),
+  delivery_fee_note: z.string().optional(),
   notes: z.string().trim().max(500, "Observação muito longa").optional(),
 });
 
@@ -198,6 +199,7 @@ const Checkout = () => {
           subtotal: i.unitPrice * i.quantity,
         })),
         notes: parsed.data.notes || null,
+        delivery_fee_note: parsed.data.delivery_fee_note || null,
         total,
       }).select().single();
 
@@ -274,6 +276,14 @@ const Checkout = () => {
                 <Input id="complement" name="complement" placeholder="Comp." />
                 <div className="md:col-span-2"><Input id="neighborhood" name="neighborhood" required value={address.neighborhood} onChange={handleAddressChange} placeholder="Bairro" /></div>
               </div>
+              <div className="grid grid-cols-4 gap-3">
+                <div className="col-span-3">
+                  <Input id="city" name="city" required value={address.city} onChange={handleAddressChange} placeholder="Cidade" />
+                </div>
+                <div className="col-span-1">
+                  <Input id="state" name="state" required maxLength={2} value={address.state} onChange={handleAddressChange} className="uppercase" placeholder="UF" />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="delivery_date">Data</Label>
@@ -300,7 +310,21 @@ const Checkout = () => {
                   <SelectItem value="dinheiro">Dinheiro</SelectItem>
                 </SelectContent>
               </Select>
+              <div>
+                <Label htmlFor="delivery_fee_note">Taxa de entrega</Label>
+                <Input id="delivery_fee_note" name="delivery_fee_note" placeholder="A combinar conforme a região" defaultValue="A combinar" maxLength={100} />
+              </div>
               <Textarea id="notes" name="notes" rows={2} maxLength={500} placeholder="Observações (ex: troco, ponto de referência)" />
+              
+              <div className="rounded-xl bg-muted/40 p-4 text-[10px] text-muted-foreground">
+                <p className="mb-1 font-semibold text-foreground">Orientações:</p>
+                <ul className="space-y-0.5">
+                  <li>• PIX: isabellyfr2000@gmail.com</li>
+                  <li>• Envie o comprovante após o pagamento</li>
+                  <li>• Pagamento até 1h antes da entrega</li>
+                </ul>
+              </div>
+
               <Button type="submit" className="h-12 w-full bg-gradient-chocolate text-base font-bold shadow-glow" disabled={submitting || items.length === 0}>
                 {submitting ? "Enviando..." : `Confirmar pedido · ${totalLabel}`}
               </Button>
