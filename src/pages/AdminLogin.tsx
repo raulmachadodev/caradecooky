@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Cookie } from "lucide-react";
+import { Cookie, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (loading) return null;
   if (user && isAdmin) return <Navigate to="/admin" replace />;
@@ -85,7 +86,23 @@ const AdminLogin = () => {
           </div>
           <div>
             <Label htmlFor="password">Senha</Label>
-            <Input id="password" name="password" type="password" required autoComplete="current-password" />
+            <div className="relative">
+              <Input 
+                id="password" 
+                name="password" 
+                type={showPassword ? "text" : "password"} 
+                required 
+                autoComplete="current-password" 
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
 
           <div className="flex justify-center py-2">

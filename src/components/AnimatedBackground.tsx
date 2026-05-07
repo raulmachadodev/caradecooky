@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import { Cookie, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ interface Particle {
   opacity: number;
 }
 
-export const AnimatedBackground: React.FC = () => {
+export const AnimatedBackground = memo(() => {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export const AnimatedBackground: React.FC = () => {
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none bg-background">
-      {/* Moving gradient mesh - VOLTADO PARA O ESTILO CLARO ANTERIOR */}
+      {/* Moving gradient mesh */}
       <div 
         className="absolute inset-0 opacity-40" 
         style={{
@@ -42,12 +42,13 @@ export const AnimatedBackground: React.FC = () => {
             radial-gradient(circle at 80% 70%, hsl(var(--accent) / 0.1) 0%, transparent 50%),
             radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.05) 0%, transparent 65%)
           `,
-          filter: "blur(70px)",
-          animation: "mesh-move 20s ease-in-out infinite alternate"
+          filter: "blur(40px)", // Reduzido de 70px para melhor performance
+          animation: "mesh-move 20s ease-in-out infinite alternate",
+          willChange: "transform, opacity"
         }}
       />
 
-      {/* Itens caindo - BEM VISÍVEIS */}
+      {/* Itens caindo */}
       {particles.map((p) => (
         <div
           key={p.id}
@@ -63,6 +64,7 @@ export const AnimatedBackground: React.FC = () => {
             opacity: p.opacity,
             animation: `fall ${p.duration}s linear infinite`,
             animationDelay: `${p.delay}s`,
+            willChange: "transform"
           }}
         >
           {p.type === "cookie" ? (
@@ -91,4 +93,6 @@ export const AnimatedBackground: React.FC = () => {
       `}</style>
     </div>
   );
-};
+});
+
+AnimatedBackground.displayName = "AnimatedBackground";
