@@ -107,6 +107,22 @@ const STATUS_VARIANT: Record<OrderStatus, "default" | "secondary" | "outline" | 
   cancelado: "destructive",
 };
 
+const STATUS_ORDER: Record<OrderStatus, number> = {
+  novo: 1,
+  em_producao: 2,
+  saiu_para_entrega: 3,
+  entregue: 4,
+  cancelado: 5
+};
+
+const NEXT_STATUS: Record<OrderStatus, OrderStatus | null> = {
+  novo: "em_producao",
+  em_producao: "saiu_para_entrega",
+  saiu_para_entrega: "entregue",
+  entregue: null,
+  cancelado: null,
+};
+
 // Componente para o Card de Pedido (Otimizado)
 const OrderCard = memo(({ o, changeStatus, deleteOrder, sendWhatsAppConfirmation }: { 
   o: OrderRow, 
@@ -114,6 +130,7 @@ const OrderCard = memo(({ o, changeStatus, deleteOrder, sendWhatsAppConfirmation
   deleteOrder: (id: string) => void,
   sendWhatsAppConfirmation: (o: OrderRow) => void
 }) => {
+  const nextStatus = NEXT_STATUS[o.status];
   return (
     <SpotlightCard
       as="article"
@@ -156,12 +173,19 @@ const OrderCard = memo(({ o, changeStatus, deleteOrder, sendWhatsAppConfirmation
 
           <div className="flex items-center gap-3">
             <div className="flex flex-col gap-2 min-w-[150px]">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Status</Label>
+              {nextStatus && (
+                <Button 
+                  onClick={() => changeStatus(o.id, nextStatus)}
+                  className="bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[10px] h-8 shadow-glow"
+                >
+                  Avançar: {STATUS_LABEL[nextStatus]}
+                </Button>
+              )}
               <Select
                 value={o.status}
                 onValueChange={(v) => changeStatus(o.id, v as OrderStatus)}
               >
-                <SelectTrigger className="h-9 rounded-xl border-secondary/30 bg-background/50 text-sm">
+                <SelectTrigger className="h-7 rounded-xl border-secondary/30 bg-background/50 text-[10px] font-bold uppercase">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -285,7 +309,8 @@ const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<"todos" | "hoje" | "ontem" | "agendados">("todos");
+  const [dateFilter, setDateFilter] = useState<"todos" | "hoje" | "ontem" | "agendados">("todos");
+  const [statusFilter, setStatusFilter] = useState<"todos" | OrderStatus>("todos");
 
   // Configurações de entrega
   const [deliveryConfig, setDeliveryConfig] = useState<DeliveryConfig>({
@@ -407,12 +432,20 @@ Podemos prosseguir com a produção? 🍪`;
   yesterday.setDate(now.getDate() - 1);
   const yesterdayStr = yesterday.toLocaleDateString('en-CA');
 
-  const filteredOrders = orders.filter(o => {
-    if (filter === 'todos') return true;
-    if (filter === 'hoje') return o.delivery_date === todayStr;
-    if (filter === 'ontem') return o.delivery_date === yesterdayStr;
-    if (filter === 'agendados') return o.delivery_date > todayStr;
+  let filteredOrders = orders.filter(o => {
+    if (dateFilter === 'hoje' && o.delivery_date !== todayStr) return false;
+    if (dateFilter === 'ontem' && o.delivery_date !== yesterdayStr) return false;
+    if (dateFilter === 'agendados' && o.delivery_date <= todayStr) return false;
+    
+    if (statusFilter !== 'todos' && o.status !== statusFilter) return false;
     return true;
+  });
+
+  filteredOrders.sort((a, b) => {
+    if (STATUS_ORDER[a.status] !== STATUS_ORDER[b.status]) {
+      return STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+    }
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
   const counts = {
@@ -512,26 +545,49 @@ Podemos prosseguir com a produção? 🍪`;
             <h1 className="font-display text-4xl text-primary">Painel de Pedidos</h1>
             <p className="mt-1 text-muted-foreground text-sm uppercase tracking-widest font-bold">Gerencie suas entregas gourmet</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: "todos", label: "Todos", count: counts.todos, icon: Inbox },
-              { id: "hoje", label: "Hoje", count: counts.hoje, icon: Clock },
-              { id: "ontem", label: "Ontem", count: counts.ontem, icon: Clock },
-              { id: "agendados", label: "Agendados", count: counts.agendados, icon: Calendar },
-            ].map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setFilter(f.id as any)}
-                className={cn(
-                  "flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all shadow-sm",
-                  filter === f.id ? "border-primary bg-primary text-primary-foreground shadow-glow" : "border-border bg-card/50 text-muted-foreground hover:border-secondary/50"
-                )}
-              >
-                <f.icon className="h-4 w-4" />
-                {f.label}
-                <span className={cn("ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px]", filter === f.id ? "bg-white/20 text-white" : "bg-muted text-muted-foreground")}>{f.count}</span>
-              </button>
-            ))}
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: "todos", label: "Todas Datas", count: counts.todos, icon: Inbox },
+                { id: "hoje", label: "Hoje", count: counts.hoje, icon: Clock },
+                { id: "ontem", label: "Ontem", count: counts.ontem, icon: Clock },
+                { id: "agendados", label: "Agendados", count: counts.agendados, icon: Calendar },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setDateFilter(f.id as any)}
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all shadow-sm",
+                    dateFilter === f.id ? "border-primary bg-primary text-primary-foreground shadow-glow" : "border-border bg-card/50 text-muted-foreground hover:border-secondary/50"
+                  )}
+                >
+                  <f.icon className="h-4 w-4" />
+                  {f.label}
+                  <span className={cn("ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px]", dateFilter === f.id ? "bg-white/20 text-white" : "bg-muted text-muted-foreground")}>{f.count}</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: "todos", label: "Todos Status" },
+                { id: "novo", label: "Novos" },
+                { id: "em_producao", label: "Em Produção" },
+                { id: "saiu_para_entrega", label: "Saiu p/ Entrega" },
+                { id: "entregue", label: "Entregues" },
+                { id: "cancelado", label: "Cancelados" },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setStatusFilter(s.id as any)}
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all shadow-sm",
+                    statusFilter === s.id ? "border-primary bg-primary text-primary-foreground shadow-glow" : "border-border bg-card/50 text-muted-foreground hover:border-secondary/50"
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

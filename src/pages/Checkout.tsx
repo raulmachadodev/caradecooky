@@ -36,16 +36,10 @@ const checkoutSchema = z.object({
     .max(20, "Telefone inválido")
     .regex(/^[\d\s()+-]+$/, "Telefone inválido"),
   cep: z.string().min(8, "CEP inválido").max(10),
-  street: z.string().min(3, "Rua obrigatória"),
+  address_combined: z.string().min(5, "Endereço obrigatório"),
   number: z.string().min(1, "Número obrigatório"),
-  neighborhood: z.string().min(2, "Bairro obrigatório"),
   complement: z.string().optional(),
-  city: z.string().min(2, "Cidade obrigatória"),
-  state: z.string().min(2, "UF obrigatória"),
   delivery_date: z.string().min(1, "Escolha a data"),
-  delivery_time: z.string().min(1, "Escolha o período"),
-  payment_method: z.enum(["pix", "credito", "debito", "dinheiro"]),
-  delivery_fee_note: z.string().optional(),
   notes: z.string().trim().max(500, "Observação muito longa").optional(),
 });
 
@@ -91,10 +85,7 @@ const Checkout = () => {
 
   const [address, setAddress] = useState({
     cep: "",
-    street: "",
-    neighborhood: "",
-    city: "",
-    state: "",
+    address_combined: "",
   });
   const [loadingCEP, setLoadingCEP] = useState(false);
 
@@ -110,10 +101,7 @@ const Checkout = () => {
         if (!data.erro) {
           setAddress(prev => ({
             ...prev,
-            street: data.logradouro,
-            neighborhood: data.bairro,
-            city: data.localidade,
-            state: data.uf,
+            address_combined: `${data.logradouro}, ${data.localidade}/${data.uf}, ${data.bairro}`
           }));
         }
       } catch (error) { /* ignore */ } finally { setLoadingCEP(false); }
@@ -185,10 +173,10 @@ const Checkout = () => {
       const { data, error } = await supabase.from("orders").insert({
         customer_name: parsed.data.customer_name,
         customer_phone: parsed.data.customer_phone,
-        delivery_address: `${parsed.data.street}, ${parsed.data.number}${parsed.data.complement ? ` - ${parsed.data.complement}` : ""} - ${parsed.data.neighborhood}, ${parsed.data.city}/${parsed.data.state}`,
+        delivery_address: `${parsed.data.address_combined}, ${parsed.data.number}${parsed.data.complement ? ` - ${parsed.data.complement}` : ""}`,
         delivery_date: parsed.data.delivery_date,
-        delivery_time: parsed.data.delivery_time,
-        payment_method: parsed.data.payment_method,
+        delivery_time: "tarde",
+        payment_method: "pix",
         items: items.map((i) => ({
           category: i.categoryName,
           size: i.size,
@@ -199,7 +187,7 @@ const Checkout = () => {
           subtotal: i.unitPrice * i.quantity,
         })),
         notes: parsed.data.notes || null,
-        delivery_fee_note: parsed.data.delivery_fee_note || null,
+        delivery_fee_note: "A combinar",
         total,
       }).select().single();
 
@@ -254,7 +242,7 @@ const Checkout = () => {
             <h2 className="mb-6 font-display text-2xl text-primary">Dados para entrega</h2>
             <form onSubmit={onSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="customer_name">Nome e sobrenome (Máx 30 letras)</Label>
+                <Label htmlFor="customer_name">Seu nome</Label>
                 <Input id="customer_name" name="customer_name" required maxLength={30} placeholder="Como quer ser chamado?" />
               </div>
               <div>
@@ -267,61 +255,26 @@ const Checkout = () => {
                   <Input id="cep" name="cep" required value={address.cep} onChange={handleCEPChange} placeholder="00000-000" />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="street">Rua / Logradouro</Label>
-                  <Input id="street" name="street" required value={address.street} onChange={handleAddressChange} />
+                  <Label htmlFor="address_combined">Endereço</Label>
+                  <Textarea id="address_combined" name="address_combined" required value={address.address_combined} onChange={handleAddressChange} placeholder="Rua, Cidade/UF, Bairro" rows={1} className="resize-none" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <Input id="number" name="number" required placeholder="Número" />
                 <Input id="complement" name="complement" placeholder="Comp." />
-                <div className="md:col-span-2"><Input id="neighborhood" name="neighborhood" required value={address.neighborhood} onChange={handleAddressChange} placeholder="Bairro" /></div>
               </div>
-              <div className="grid grid-cols-4 gap-3">
-                <div className="col-span-3">
-                  <Input id="city" name="city" required value={address.city} onChange={handleAddressChange} placeholder="Cidade" />
-                </div>
-                <div className="col-span-1">
-                  <Input id="state" name="state" required maxLength={2} value={address.state} onChange={handleAddressChange} className="uppercase" placeholder="UF" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="delivery_date">Data</Label>
-                  <Input id="delivery_date" name="delivery_date" type="date" required min={today} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
-                </div>
-                <div>
-                  <Label htmlFor="delivery_time">Período</Label>
-                  <Select name="delivery_time" defaultValue="tarde">
-                    <SelectTrigger className="h-12 rounded-xl border-secondary/30"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manha">Manhã</SelectItem>
-                      <SelectItem value="tarde">Tarde</SelectItem>
-                      <SelectItem value="noite">Noite</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <Select name="payment_method" defaultValue="pix">
-                <SelectTrigger><SelectValue placeholder="Forma de pagamento" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="credito">Crédito</SelectItem>
-                  <SelectItem value="debito">Débito</SelectItem>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                </SelectContent>
-              </Select>
               <div>
-                <Label htmlFor="delivery_fee_note">Taxa de entrega</Label>
-                <Input id="delivery_fee_note" name="delivery_fee_note" placeholder="A combinar conforme a região" defaultValue="A combinar" maxLength={100} />
+                <Label htmlFor="delivery_date">Data de Entrega</Label>
+                <Input id="delivery_date" name="delivery_date" type="date" required min={today} defaultValue={today} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
               </div>
               <Textarea id="notes" name="notes" rows={2} maxLength={500} placeholder="Observações (ex: troco, ponto de referência)" />
               
-              <div className="rounded-xl bg-muted/40 p-4 text-[10px] text-muted-foreground">
-                <p className="mb-1 font-semibold text-foreground">Orientações:</p>
-                <ul className="space-y-0.5">
-                  <li>• PIX: isabellyfr2000@gmail.com</li>
-                  <li>• Envie o comprovante após o pagamento</li>
-                  <li>• Pagamento até 1h antes da entrega</li>
+              <div className="rounded-xl bg-muted/40 p-4 text-[11px] text-muted-foreground border border-border/50">
+                <p className="mb-2 font-bold text-primary uppercase tracking-widest text-[10px]">Forma de Pagamento e Entrega</p>
+                <ul className="space-y-1">
+                  <li>• <strong>Pagamento Exclusivo via PIX:</strong> isabellyfr2000@gmail.com</li>
+                  <li>• Envie o comprovante via WhatsApp após finalizar o pedido</li>
+                  <li>• <strong>Taxa de Entrega:</strong> A combinar de acordo com a região</li>
                 </ul>
               </div>
 
