@@ -37,7 +37,6 @@ const checkoutSchema = z.object({
     .regex(/^[\d\s()+-]+$/, "Telefone inválido"),
   cep: z.string().min(8, "CEP inválido").max(10),
   address_combined: z.string().min(5, "Endereço obrigatório"),
-  number: z.string().min(1, "Número obrigatório"),
   complement: z.string().optional(),
   delivery_date: z.string().min(1, "Escolha a data"),
   notes: z.string().trim().max(500, "Observação muito longa").optional(),
@@ -173,7 +172,7 @@ const Checkout = () => {
       const { data, error } = await supabase.from("orders").insert({
         customer_name: parsed.data.customer_name,
         customer_phone: parsed.data.customer_phone,
-        delivery_address: `${parsed.data.address_combined}, ${parsed.data.number}${parsed.data.complement ? ` - ${parsed.data.complement}` : ""}`,
+        delivery_address: `${parsed.data.address_combined}${parsed.data.complement ? ` - ${parsed.data.complement}` : ""}`,
         delivery_date: parsed.data.delivery_date,
         delivery_time: "tarde",
         payment_method: "pix",
@@ -256,12 +255,11 @@ const Checkout = () => {
                 </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="address_combined">Endereço</Label>
-                  <Textarea id="address_combined" name="address_combined" required value={address.address_combined} onChange={handleAddressChange} placeholder="Rua, Cidade/UF, Bairro" rows={1} className="resize-none" />
+                  <Textarea id="address_combined" name="address_combined" required value={address.address_combined} onChange={handleAddressChange} placeholder="Rua, Número, Cidade/UF, Bairro" rows={1} className="resize-none" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Input id="number" name="number" required placeholder="Número" />
-                <Input id="complement" name="complement" placeholder="Comp." />
+              <div className="w-full">
+                <Input id="complement" name="complement" placeholder="Complemento (Opcional, ex: Bloco 2, Apto 34)" />
               </div>
               <div>
                 <Label htmlFor="delivery_date">Data de Entrega</Label>
