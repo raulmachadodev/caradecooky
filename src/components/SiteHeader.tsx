@@ -35,6 +35,9 @@ export function SiteHeader() {
           <Link to="/#contato" className="text-muted-foreground transition-colors hover:text-secondary">
             Contato
           </Link>
+          <Link to="/track" className="text-muted-foreground transition-colors hover:text-secondary">
+            Acompanhar Pedido
+          </Link>
         </nav>
  
         {/* Lado Direito: Botão Pedido */}

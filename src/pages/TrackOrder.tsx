@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Search, Package, Clock, CheckCircle2, XCircle, MessageCircle, ArrowLeft, Truck, Instagram } from "lucide-react";
+import { Search, Package, Clock, CheckCircle2, XCircle, MessageCircle, ArrowLeft, Truck, Instagram, ChevronRight } from "lucide-react";
+import { formatBRL } from "@/data/menu";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -198,6 +199,58 @@ export default function TrackOrder() {
                     <p className="font-bold text-primary uppercase">{PERIOD_LABELS[order.delivery_time] || order.delivery_time}</p>
                   </div>
                 </div>
+
+                {(() => {
+                  let parsedItems: any[] = [];
+                  try {
+                    if (Array.isArray(order.items)) parsedItems = order.items;
+                    else if (typeof order.items === 'string') parsedItems = JSON.parse(order.items);
+                  } catch (e) {
+                    parsedItems = [];
+                  }
+
+                  return (
+                    <div className="mb-8 rounded-2xl bg-background/50 p-5 text-left border border-border/50">
+                      <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground flex items-center gap-2">
+                        <ChevronRight className="h-3 w-3 text-primary" /> Detalhes do Pedido
+                      </p>
+                      <ul className="space-y-3">
+                        {parsedItems.map((it: any, idx: number) => (
+                          <li key={idx} className="flex justify-between gap-4 border-b border-border/30 pb-3 last:border-0 last:pb-0">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-foreground">
+                                {it.quantity}× {it.category}
+                              </span>
+                              <span className="text-xs text-muted-foreground font-medium">
+                                {it.size} · {it.flavor}
+                                {it.premium && (
+                                  <span className="ml-2 rounded-full bg-gradient-gold/20 px-2 py-0.5 text-[8px] font-bold uppercase text-primary">
+                                    Premium
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            <span className="font-bold text-primary">{formatBRL(it.subtotal)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-6 flex flex-col gap-3 border-t border-border/50 pt-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Endereço</span>
+                          <span className="text-sm font-medium text-foreground text-right max-w-[60%] leading-tight">{order.delivery_address || "Retirada no local"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Pagamento</span>
+                          <Badge variant="outline" className="font-bold border-secondary/30">{order.payment_method.toUpperCase()}</Badge>
+                        </div>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Total Geral</span>
+                          <span className="font-display text-2xl font-bold text-primary">{formatBRL(Number(order.total))}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                   <div className="flex flex-col gap-3">
                     <Button asChild className="h-14 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black gap-3 shadow-soft hover:scale-[1.02] transition-transform">
