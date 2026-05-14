@@ -273,10 +273,6 @@ const OrderCard = memo(({ o, changeStatus, deleteOrder, sendWhatsAppConfirmation
                       <span className="text-muted-foreground font-medium">Data:</span>
                       <span className="font-bold text-primary">{o.delivery_date.split('-').reverse().join('/')}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground font-medium">Período:</span>
-                      <span className="font-bold text-primary uppercase">{PERIOD_LABELS[o.delivery_time] || o.delivery_time}</span>
-                    </div>
                     <div className="border-t border-border/30 pt-3">
                       <span className="text-muted-foreground font-medium block mb-1">Endereço:</span>
                       <span className="font-bold text-foreground block leading-tight">{o.delivery_address || "Retirada no local"}</span>
@@ -411,7 +407,7 @@ ${itemsList}
 
 *Total: ${formatBRL(o.total)}*
 *Pagamento:* ${o.payment_method.toUpperCase()}
-*Entrega:* ${o.delivery_date.split('-').reverse().join('/')} (${PERIOD_LABELS[o.delivery_time] || o.delivery_time})
+*Entrega:* ${o.delivery_date.split('-').reverse().join('/')}
 
 📍 *Endereço:*
 ${o.delivery_address || 'Retirada no local'}

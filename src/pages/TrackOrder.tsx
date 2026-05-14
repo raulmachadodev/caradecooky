@@ -189,14 +189,10 @@ export default function TrackOrder() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="rounded-2xl bg-secondary/5 p-4 border border-secondary/10">
+                <div className="mb-8">
+                  <div className="rounded-2xl bg-secondary/5 p-4 border border-secondary/10 w-full">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Entrega prevista</p>
                     <p className="font-bold text-primary">{order.delivery_date.split('-').reverse().join('/')}</p>
-                  </div>
-                  <div className="rounded-2xl bg-secondary/5 p-4 border border-secondary/10">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Período</p>
-                    <p className="font-bold text-primary uppercase">{PERIOD_LABELS[order.delivery_time] || order.delivery_time}</p>
                   </div>
                 </div>
 

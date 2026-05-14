@@ -112,12 +112,28 @@ export function CategoryCard({ category }: Props) {
                     </span>
                   )}
                 </span>
+                {f.key === "cappuccino" && (
+                  <span className="mt-0.5 text-[10px] font-medium italic text-muted-foreground">
+                    Esgotado ou indisponível
+                  </span>
+                )}
+                {f.key === "kinder" && (
+                  <span className="mt-0.5 text-[10px] font-medium italic text-muted-foreground">
+                    Edição especial limitada esgotada
+                  </span>
+                )}
               </div>
               <Button
                 size="sm"
                 variant="secondary"
+                disabled={f.key === "cappuccino" || f.key === "kinder"}
                 onClick={() => handleAdd(f.key, f.name, !!f.premium)}
-                className="h-8 shrink-0 gap-1.5 rounded-full px-4 font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                className={cn(
+                  "h-8 shrink-0 gap-1.5 rounded-full px-4 font-semibold transition-colors",
+                  f.key === "cappuccino" || f.key === "kinder"
+                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-90 grayscale-[0.5] hover:bg-muted hover:text-muted-foreground"
+                    : "text-primary hover:bg-primary hover:text-primary-foreground"
+                )}
               >
                 <Plus className="h-3.5 w-3.5" />
                 Adicionar
