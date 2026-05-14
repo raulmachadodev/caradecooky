@@ -5,11 +5,25 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { useCart } from "@/context/CartContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { Instagram, MessageCircle, ShoppingBag } from "lucide-react";
 
 const Index = () => {
   const { count } = useCart();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const el = document.querySelector(location.hash);
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [location]);
+
   return (
     <div className="relative min-h-screen">
       <AnimatedBackground />

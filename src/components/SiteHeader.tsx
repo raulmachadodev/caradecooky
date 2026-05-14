@@ -26,15 +26,15 @@ export function SiteHeader() {
  
         {/* Centro: Links */}
         <nav className="hidden items-center gap-8 text-sm font-bold uppercase tracking-widest md:flex">
-          <a href="#cardapio" className="text-muted-foreground transition-colors hover:text-secondary">
+          <Link to="/#cardapio" className="text-muted-foreground transition-colors hover:text-secondary">
             Cardápio
-          </a>
-          <a href="#sobre" className="text-muted-foreground transition-colors hover:text-secondary">
+          </Link>
+          <Link to="/#sobre" className="text-muted-foreground transition-colors hover:text-secondary">
             Sobre
-          </a>
-          <a href="#contato" className="text-muted-foreground transition-colors hover:text-secondary">
+          </Link>
+          <Link to="/#contato" className="text-muted-foreground transition-colors hover:text-secondary">
             Contato
-          </a>
+          </Link>
         </nav>
  
         {/* Lado Direito: Botão Pedido */}
