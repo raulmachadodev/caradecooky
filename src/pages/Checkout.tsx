@@ -53,8 +53,11 @@ const Checkout = () => {
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<string | null>(null);
   const [deliveryConfig, setDeliveryConfig] = useState<DeliveryConfig | null>(null);
+  const [selectedDate, setSelectedDate] = useState("");
 
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  
   const [phone, setPhone] = useState("");
 
   useEffect(() => {
@@ -64,7 +67,28 @@ const Checkout = () => {
         .select("value")
         .eq("id", "delivery_config")
         .maybeSingle();
-      if (data?.value) setDeliveryConfig(data.value as unknown as DeliveryConfig);
+        
+      if (data?.value) {
+        const config = data.value as unknown as DeliveryConfig;
+        setDeliveryConfig(config);
+
+        let currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        
+        for (let i = 0; i < 30; i++) {
+          const yyyy = currentDate.getFullYear();
+          const mm = String(currentDate.getMonth() + 1).padStart(2, '0');
+          const dd = String(currentDate.getDate()).padStart(2, '0');
+          const dateStr = `${yyyy}-${mm}-${dd}`;
+          const weekday = currentDate.getDay();
+
+          if (config.allowed_weekdays.includes(weekday) && !config.blocked_dates.includes(dateStr)) {
+            setSelectedDate(dateStr);
+            break;
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
     }
     loadConfig();
   }, []);
@@ -112,21 +136,23 @@ const Checkout = () => {
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedDate = e.target.value;
-    if (!selectedDate || !deliveryConfig) return;
+    const newDate = e.target.value;
+    setSelectedDate(newDate);
+    
+    if (!newDate || !deliveryConfig) return;
 
-    const dateObj = new Date(selectedDate + 'T00:00:00');
+    const dateObj = new Date(newDate + 'T00:00:00');
     const weekday = dateObj.getDay();
 
     if (!deliveryConfig.allowed_weekdays.includes(weekday)) {
       toast.error("Não realizamos entregas neste dia da semana.");
-      e.target.value = "";
+      setSelectedDate("");
       return;
     }
 
-    if (deliveryConfig.blocked_dates.includes(selectedDate)) {
+    if (deliveryConfig.blocked_dates.includes(newDate)) {
       toast.error("Esta data específica não está disponível para entregas.");
-      e.target.value = "";
+      setSelectedDate("");
       return;
     }
   };
@@ -263,7 +289,7 @@ const Checkout = () => {
               </div>
               <div>
                 <Label htmlFor="delivery_date">Data de Entrega</Label>
-                <Input id="delivery_date" name="delivery_date" type="date" required min={today} defaultValue={today} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
+                <Input id="delivery_date" name="delivery_date" type="date" required min={today} value={selectedDate} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
               </div>
               <Textarea id="notes" name="notes" rows={2} maxLength={500} placeholder="Observações (ex: troco, ponto de referência)" />
               
