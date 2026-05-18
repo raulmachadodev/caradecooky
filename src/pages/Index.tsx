@@ -6,13 +6,23 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { useCart } from "@/context/CartContext";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Instagram, MessageCircle, ShoppingBag } from "lucide-react";
 
 const Index = () => {
   const { count } = useCart();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Redirect to Admin if launched in standalone PWA mode on an admin device
+  useEffect(() => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    const isAdminDevice = localStorage.getItem("is_admin_device") === "true";
+    if (isStandalone && isAdminDevice) {
+      navigate("/admin");
+    }
+  }, [navigate]);
 
   useEffect(() => {
     if (location.hash) {

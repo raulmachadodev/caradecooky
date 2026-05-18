@@ -401,7 +401,10 @@ const Admin = () => {
   }
 
   useEffect(() => {
-    if (user && isAdmin) load();
+    if (user && isAdmin) {
+      localStorage.setItem("is_admin_device", "true");
+      load();
+    }
   }, [user, isAdmin]);
 
   // Dynamically swap manifest for admin PWA install
