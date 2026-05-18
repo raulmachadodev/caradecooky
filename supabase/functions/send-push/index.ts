@@ -1,191 +1,214 @@
 // Supabase Edge Function: send-push
 // Triggered via Database Webhook on INSERT to orders table
-// Sends Web Push notifications to all subscribed admin devices
+// RFC 8030 compliant — sends push with proper VAPID JWT + encrypted payload (RFC 8291)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// VAPID keys (set as Supabase secrets)
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
 const VAPID_SUBJECT = "mailto:isabellyfr2000@gmail.com";
 
-// Helper: base64url encode
-function base64urlEncode(data: Uint8Array): string {
-  return btoa(String.fromCharCode(...data))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+// --- Helpers ---
+function b64uEncode(buf: Uint8Array): string {
+  return btoa(String.fromCharCode(...buf))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64uDecode(s: string): Uint8Array {
+  const b = s.replace(/-/g, "+").replace(/_/g, "/");
+  return Uint8Array.from(atob(b), (c) => c.charCodeAt(0));
+}
+function concat(...arrs: Uint8Array[]): Uint8Array {
+  const out = new Uint8Array(arrs.reduce((n, a) => n + a.length, 0));
+  let i = 0; for (const a of arrs) { out.set(a, i); i += a.length; }
+  return out;
 }
 
-// Helper: base64url decode
-function base64urlDecode(str: string): Uint8Array {
-  const b64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  const raw = atob(b64);
-  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+// Build PKCS8 wrapper for raw P-256 private key (32 bytes)
+function rawToPkcs8(raw: Uint8Array): Uint8Array {
+  // DER prefix for P-256 private key in PKCS8 format
+  const prefix = new Uint8Array([
+    0x30, 0x41, 0x02, 0x01, 0x00, 0x30, 0x13, 0x06, 0x07,
+    0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08,
+    0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x04,
+    0x27, 0x30, 0x25, 0x02, 0x01, 0x01, 0x04, 0x20,
+  ]);
+  return concat(prefix, raw);
 }
 
-// Create VAPID JWT for authorization
+// HKDF-Expand (SHA-256)
+async function hkdfExpand(prk: Uint8Array, info: Uint8Array, len: number): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey("raw", prk, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const out = new Uint8Array(len);
+  let prev = new Uint8Array(0);
+  for (let i = 0; i < Math.ceil(len / 32); i++) {
+    const data = concat(prev, info, new Uint8Array([i + 1]));
+    prev = new Uint8Array(await crypto.subtle.sign("HMAC", key, data));
+    out.set(prev.subarray(0, Math.min(32, len - i * 32)), i * 32);
+  }
+  return out;
+}
+
+// HKDF-Extract (SHA-256)
+async function hkdfExtract(salt: Uint8Array, ikm: Uint8Array): Promise<Uint8Array> {
+  const saltKey = await crypto.subtle.importKey("raw", salt, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", saltKey, ikm));
+}
+
+// RFC 8291 payload encryption (aes128gcm)
+async function encryptPayload(
+  p256dh: string,
+  auth: string,
+  plaintext: string,
+): Promise<{ body: Uint8Array }> {
+  const receiverPubBytes = b64uDecode(p256dh);
+  const authBytes = b64uDecode(auth);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+
+  // Ephemeral sender key pair
+  const senderPair = await crypto.subtle.generateKey(
+    { name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"],
+  );
+  const senderPubBytes = new Uint8Array(
+    await crypto.subtle.exportKey("raw", senderPair.publicKey),
+  );
+
+  // Import receiver public key
+  const receiverPub = await crypto.subtle.importKey(
+    "raw", receiverPubBytes, { name: "ECDH", namedCurve: "P-256" }, false, [],
+  );
+
+  // ECDH shared secret
+  const ecdhBits = new Uint8Array(
+    await crypto.subtle.deriveBits({ name: "ECDH", public: receiverPub }, senderPair.privateKey, 256),
+  );
+
+  // PRK from auth (RFC 8291 §3.4)
+  const prkInfo = concat(
+    new TextEncoder().encode("WebPush: info\x00"),
+    receiverPubBytes,
+    senderPubBytes,
+  );
+  const prk1 = await hkdfExtract(authBytes, ecdhBits);
+  const ikm = await hkdfExpand(prk1, prkInfo, 32);
+
+  // CEK and nonce (RFC 8188)
+  const prk2 = await hkdfExtract(salt, ikm);
+  const cek = await hkdfExpand(prk2, new TextEncoder().encode("Content-Encoding: aes128gcm\x00\x01"), 16);
+  const nonce = await hkdfExpand(prk2, new TextEncoder().encode("Content-Encoding: nonce\x00\x01"), 12);
+
+  // AES-128-GCM encrypt (add 0x02 delimiter per RFC 8188)
+  const aesKey = await crypto.subtle.importKey("raw", cek, "AES-GCM", false, ["encrypt"]);
+  const padded = concat(new TextEncoder().encode(plaintext), new Uint8Array([0x02]));
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, aesKey, padded),
+  );
+
+  // RFC 8188 header: salt(16) + rs(4, BE) + idlen(1) + senderPub(65) + ciphertext
+  const rs = new Uint8Array(4);
+  new DataView(rs.buffer).setUint32(0, 4096, false);
+  const body = concat(salt, rs, new Uint8Array([senderPubBytes.length]), senderPubBytes, ciphertext);
+  return { body };
+}
+
+// VAPID JWT (RFC 8292) — uses PKCS8 import to fix the raw key issue
 async function createVapidJWT(audience: string): Promise<string> {
-  const header = { typ: "JWT", alg: "ES256" };
   const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    aud: audience,
-    exp: now + 12 * 3600,
-    sub: VAPID_SUBJECT,
-  };
+  const header = b64uEncode(new TextEncoder().encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
+  const body = b64uEncode(new TextEncoder().encode(JSON.stringify({
+    aud: audience, exp: now + 43200, sub: VAPID_SUBJECT,
+  })));
+  const input = `${header}.${body}`;
 
-  const encodedHeader = base64urlEncode(
-    new TextEncoder().encode(JSON.stringify(header))
-  );
-  const encodedPayload = base64urlEncode(
-    new TextEncoder().encode(JSON.stringify(payload))
-  );
-  const signingInput = `${encodedHeader}.${encodedPayload}`;
-
-  const privateKeyBytes = base64urlDecode(VAPID_PRIVATE_KEY);
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    privateKeyBytes,
+  const privKey = await crypto.subtle.importKey(
+    "pkcs8",
+    rawToPkcs8(b64uDecode(VAPID_PRIVATE_KEY)),
     { name: "ECDSA", namedCurve: "P-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
-
-  const signature = await crypto.subtle.sign(
-    { name: "ECDSA", hash: "SHA-256" },
-    cryptoKey,
-    new TextEncoder().encode(signingInput)
+  const sig = new Uint8Array(
+    await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, privKey, new TextEncoder().encode(input)),
   );
-
-  const encodedSig = base64urlEncode(new Uint8Array(signature));
-  return `${signingInput}.${encodedSig}`;
+  return `${input}.${b64uEncode(sig)}`;
 }
 
-// Send a single push notification to one subscription
-async function sendPushNotification(
-  subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
-  payload: string
-): Promise<boolean> {
-  const url = new URL(subscription.endpoint);
-  const audience = `${url.protocol}//${url.host}`;
-  const jwt = await createVapidJWT(audience);
+// Send push to one endpoint
+async function sendPush(sub: { endpoint: string; p256dh: string; auth: string }, payload: string): Promise<number> {
+  const url = new URL(sub.endpoint);
+  const jwt = await createVapidJWT(`${url.protocol}//${url.host}`);
+  const { body } = await encryptPayload(sub.p256dh, sub.auth, payload);
 
-  const payloadBytes = new TextEncoder().encode(payload);
-
-  const response = await fetch(subscription.endpoint, {
+  const res = await fetch(sub.endpoint, {
     method: "POST",
     headers: {
       "Authorization": `vapid t=${jwt},k=${VAPID_PUBLIC_KEY}`,
-      "Content-Type": "application/octet-stream",
       "Content-Encoding": "aes128gcm",
+      "Content-Type": "application/octet-stream",
       "TTL": "86400",
+      "Urgency": "high",
     },
-    body: payloadBytes,
+    body,
   });
-
-  return response.ok || response.status === 201;
+  return res.status;
 }
 
 serve(async (req) => {
-  // Allow CORS
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
-
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const body = await req.json();
-
-    // Body can come from DB Webhook (record) or direct call ({ order })
     const order = body.record ?? body.order ?? body;
 
-    if (!order) {
-      return new Response(JSON.stringify({ error: "No order data" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Build notification payload
+    // Build notification text
     let itemCount = 0;
-    let itemsText = "";
     try {
-      const items = Array.isArray(order.items)
-        ? order.items
-        : JSON.parse(order.items ?? "[]");
-      itemCount = items.reduce((acc: number, i: any) => acc + (i.quantity ?? 1), 0);
-      itemsText = items
-        .map((i: any) => `${i.quantity}x ${i.category}`)
-        .join(", ");
+      const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items ?? "[]");
+      itemCount = items.reduce((s: number, i: any) => s + (i.quantity ?? 1), 0);
     } catch (_) {}
 
-    const totalFormatted = order.total
+    const total = order.total
       ? Number(order.total).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
       : "—";
+    const orderId = (order.id ?? "").slice(0, 8).toUpperCase();
+    const name = order.customer_name ?? "Cliente";
 
-    const orderId = order.id?.slice(0, 8).toUpperCase() ?? "?";
-    const customerName = order.customer_name ?? "Cliente";
-
-    const notifPayload = JSON.stringify({
+    const payload = JSON.stringify({
       title: `🍪 Novo Pedido #${orderId}`,
-      body: `${customerName} · ${itemCount} ${itemCount === 1 ? "item" : "itens"} · ${totalFormatted}${itemsText ? `\n${itemsText}` : ""}`,
+      body: `${name} · ${itemCount} ${itemCount === 1 ? "item" : "itens"} · ${total}`,
       orderId: order.id ?? "",
-      total: totalFormatted,
-      itemCount,
     });
 
-    // Get all subscriptions from DB
+    // Fetch subscriptions
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
-
-    const { data: subscriptions, error } = await supabase
-      .from("push_subscriptions")
-      .select("*");
-
-    if (error) {
-      console.error("Error fetching subscriptions:", error);
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const { data: subs, error } = await supabase.from("push_subscriptions").select("*");
+    if (error) throw error;
+    if (!subs?.length) {
+      return new Response(JSON.stringify({ sent: 0, message: "no subscriptions" }), { headers: corsHeaders });
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: "No subscriptions" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Send to all subscriptions, remove expired ones
     let sent = 0;
     const toRemove: string[] = [];
-
-    for (const sub of subscriptions) {
+    for (const sub of subs) {
       try {
-        const success = await sendPushNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          notifPayload
-        );
-        if (success) {
-          sent++;
-        } else {
-          toRemove.push(sub.id);
-        }
+        const status = await sendPush(sub, payload);
+        if (status === 201 || status === 200 || status === 204) sent++;
+        else if (status === 404 || status === 410) toRemove.push(sub.id);
+        else console.warn("push status", status, "for", sub.endpoint);
       } catch (e) {
-        console.error("Push failed for", sub.endpoint, e);
-        toRemove.push(sub.id);
+        console.error("push error:", e);
       }
     }
 
-    // Clean up expired subscriptions
-    if (toRemove.length > 0) {
+    if (toRemove.length) {
       await supabase.from("push_subscriptions").delete().in("id", toRemove);
     }
 
