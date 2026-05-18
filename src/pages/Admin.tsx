@@ -404,6 +404,19 @@ const Admin = () => {
     if (user && isAdmin) load();
   }, [user, isAdmin]);
 
+  // Dynamically swap manifest for admin PWA install
+  useEffect(() => {
+    const link = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
+    if (link) {
+      link.href = "/admin-manifest.json";
+    }
+    return () => {
+      if (link) {
+        link.href = "/manifest.json";
+      }
+    };
+  }, []);
+
   if (loading) return null;
   if (!user || !isAdmin) return <Navigate to="/admin/login" replace />;
 
