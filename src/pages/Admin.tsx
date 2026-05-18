@@ -1,6 +1,7 @@
 import { useEffect, useState, memo } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { LogOut, Cookie, RefreshCw, Calendar, Clock, Inbox, ChevronRight, Truck, Settings, X, Plus, Trash2 } from "lucide-react";
+import { LogOut, Cookie, RefreshCw, Calendar, Clock, Inbox, ChevronRight, Truck, Settings, X, Plus, Trash2, Bell, BellOff } from "lucide-react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -301,6 +302,48 @@ const OrderCard = memo(({ o, changeStatus, deleteOrder, sendWhatsAppConfirmation
 
 OrderCard.displayName = "OrderCard";
 
+// PushButton — manages Web Push subscription state
+function PushButton() {
+  const { status, isSubscribed, subscribe, unsubscribe } = usePushNotifications();
+
+  if (status === "unsupported") return null;
+
+  if (isSubscribed) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={unsubscribe}
+        className="gap-2 border-secondary/30 text-primary"
+        title="Desativar notificações push"
+      >
+        <BellOff className="h-4 w-4 text-muted-foreground" />
+        <span className="hidden sm:inline text-xs">Notificações</span>
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={subscribe}
+      disabled={status === "loading" || status === "denied"}
+      title={
+        status === "denied"
+          ? "Permissão negada — acesse as configurações do Safari"
+          : "Ativar notificações de novos pedidos"
+      }
+      className="gap-2 border-amber-500/40 text-amber-700 hover:bg-amber-50"
+    >
+      <Bell className="h-4 w-4" />
+      <span className="hidden sm:inline text-xs">
+        {status === "denied" ? "Bloqueado" : "Ativar alertas"}
+      </span>
+    </Button>
+  );
+}
+
 const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
   const [orders, setOrders] = useState<OrderRow[]>([]);
@@ -464,6 +507,7 @@ Podemos prosseguir com a produção? 🍪`;
           </Link>
 
           <div className="flex items-center gap-3">
+            <PushButton />
             <Button className="gap-2 bg-gradient-gold text-primary shadow-glow font-bold" size="sm" onClick={load} disabled={refreshing}>
               <RefreshCw className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
               <span className="hidden sm:inline">Atualizar</span>

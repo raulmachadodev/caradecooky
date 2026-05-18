@@ -268,7 +268,7 @@ const Checkout = () => {
             <form onSubmit={onSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="customer_name">Seu nome</Label>
-                <Input id="customer_name" name="customer_name" required maxLength={30} placeholder="Como quer ser chamado?" />
+                <Input id="customer_name" name="customer_name" required maxLength={30} placeholder="Digite seu nome" />
               </div>
               <div>
                 <Label htmlFor="customer_phone">WhatsApp</Label>

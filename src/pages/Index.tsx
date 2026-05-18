@@ -1,5 +1,6 @@
 import { CATEGORIES } from "@/data/menu";
 import { CategoryCard } from "@/components/CategoryCard";
+import { BrownieCard } from "@/components/BrownieCard";
 import { FeaturesStrip } from "@/components/FeaturesStrip";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -84,6 +85,7 @@ const Index = () => {
             {CATEGORIES.map((cat) => (
               <CategoryCard key={cat.slug} category={cat} />
             ))}
+            <BrownieCard />
           </div>
         </section>
 
