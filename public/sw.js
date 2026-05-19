@@ -29,7 +29,7 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: '/logo.png',
+    icon: self.location.origin + '/logo.png',
     tag: `order-${data.orderId || Date.now()}`,
     data: {
       url: '/admin',

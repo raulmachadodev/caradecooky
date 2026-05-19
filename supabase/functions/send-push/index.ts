@@ -140,7 +140,7 @@ async function createVapidJWT(audience: string): Promise<string> {
 }
 
 // Send push to one endpoint
-async function sendPush(sub: { endpoint: string; p256dh: string; auth: string }, payload: string): Promise<number> {
+async function sendPush(sub: { endpoint: string; p256dh: string; auth: string }, payload: string): Promise<{ status: number; text: string }> {
   const url = new URL(sub.endpoint);
   const jwt = await createVapidJWT(`${url.protocol}//${url.host}`);
   const { body } = await encryptPayload(sub.p256dh, sub.auth, payload);
@@ -148,7 +148,7 @@ async function sendPush(sub: { endpoint: string; p256dh: string; auth: string },
   const res = await fetch(sub.endpoint, {
     method: "POST",
     headers: {
-      "Authorization": `vapid t=${jwt},k=${VAPID_PUBLIC_KEY}`,
+      "Authorization": `vapid t=${jwt}, k=${VAPID_PUBLIC_KEY}`,
       "Content-Encoding": "aes128gcm",
       "Content-Type": "application/octet-stream",
       "TTL": "86400",
@@ -156,7 +156,8 @@ async function sendPush(sub: { endpoint: string; p256dh: string; auth: string },
     },
     body,
   });
-  return res.status;
+  const text = await res.text();
+  return { status: res.status, text };
 }
 
 serve(async (req) => {
@@ -200,12 +201,17 @@ serve(async (req) => {
     const toRemove: string[] = [];
     for (const sub of subs) {
       try {
-        const status = await sendPush(sub, payload);
-        if (status === 201 || status === 200 || status === 204) sent++;
-        else if (status === 404 || status === 410) toRemove.push(sub.id);
-        else console.warn("push status", status, "for", sub.endpoint);
+        const { status, text } = await sendPush(sub, payload);
+        if (status === 201 || status === 200 || status === 204) {
+          sent++;
+        } else if (status === 404 || status === 410) {
+          toRemove.push(sub.id);
+          console.warn(`[Push] Inscrição expirada ou inválida (status ${status}). Removendo ID: ${sub.id} | Endpoint: ${sub.endpoint}`);
+        } else {
+          console.error(`[Push] Falha ao enviar notificação. Status: ${status}. Resposta: ${text} | Endpoint: ${sub.endpoint}`);
+        }
       } catch (e) {
-        console.error("push error:", e);
+        console.error("[Push] Erro de rede ou criptografia durante o envio:", e);
       }
     }
 
