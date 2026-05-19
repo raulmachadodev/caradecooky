@@ -401,10 +401,48 @@ const Admin = () => {
   }
 
   useEffect(() => {
-    if (user && isAdmin) {
-      localStorage.setItem("is_admin_device", "true");
-      load();
-    }
+    if (!user || !isAdmin) return;
+
+    localStorage.setItem("is_admin_device", "true");
+    load();
+
+    // Set up realtime listener for orders table
+    const channel = supabase
+      .channel("admin-orders-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const newOrder = payload.new as OrderRow;
+            // Add new order at the top of the list
+            setOrders((prev) => [newOrder, ...prev]);
+            toast.success(`🍪 Novo pedido de ${newOrder.customer_name}!`, {
+              description: `Valor: ${Number(newOrder.total).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
+              duration: 8000,
+            });
+            // Play sweet notification sound
+            try {
+              const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav");
+              audio.volume = 0.5;
+              audio.play();
+            } catch (_) {}
+          } else if (payload.eventType === "UPDATE") {
+            const updatedOrder = payload.new as OrderRow;
+            setOrders((prev) =>
+              prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
+            );
+          } else if (payload.eventType === "DELETE") {
+            const deletedId = payload.old.id;
+            setOrders((prev) => prev.filter((o) => o.id !== deletedId));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, isAdmin]);
 
   // Dynamically swap manifest for admin PWA install
