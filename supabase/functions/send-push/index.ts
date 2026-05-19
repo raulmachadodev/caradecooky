@@ -193,6 +193,12 @@ serve(async (req) => {
     );
     const { data: subs, error } = await supabase.from("push_subscriptions").select("*");
     if (error) throw error;
+
+    console.log(`[Push] Encontradas ${subs?.length ?? 0} inscrições ativas no banco de dados.`);
+    if (subs && subs.length > 0) {
+      console.log("[Push] Lista de Endpoints:", subs.map(s => s.endpoint.slice(0, 45) + "..."));
+    }
+
     if (!subs?.length) {
       return new Response(JSON.stringify({ sent: 0, message: "no subscriptions" }), { headers: corsHeaders });
     }
