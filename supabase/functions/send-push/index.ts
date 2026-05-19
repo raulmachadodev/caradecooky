@@ -181,8 +181,8 @@ serve(async (req) => {
     const name = order.customer_name ?? "Cliente";
 
     const payload = JSON.stringify({
-      title: `🍪 Novo Pedido #${orderId}`,
-      body: `${name} · ${itemCount} ${itemCount === 1 ? "item" : "itens"} · ${total}`,
+      title: `🍪 Novo pedido de ${name}`,
+      body: `Total: ${total} · ${itemCount} ${itemCount === 1 ? "item" : "itens"}`,
       orderId: order.id ?? "",
     });
 
