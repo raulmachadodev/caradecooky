@@ -89,8 +89,8 @@ async function encryptPayload(
 
   // CEK and nonce (RFC 8188)
   const prk2 = await hkdfExtract(salt, ikm);
-  const cek = await hkdfExpand(prk2, new TextEncoder().encode("Content-Encoding: aes128gcm\x00\x01"), 16);
-  const nonce = await hkdfExpand(prk2, new TextEncoder().encode("Content-Encoding: nonce\x00\x01"), 12);
+  const cek = await hkdfExpand(prk2, new TextEncoder().encode("Content-Encoding: aes128gcm\x00"), 16);
+  const nonce = await hkdfExpand(prk2, new TextEncoder().encode("Content-Encoding: nonce\x00"), 12);
 
   // AES-128-GCM encrypt (add 0x02 delimiter per RFC 8188)
   const aesKey = await crypto.subtle.importKey("raw", cek, "AES-GCM", false, ["encrypt"]);
