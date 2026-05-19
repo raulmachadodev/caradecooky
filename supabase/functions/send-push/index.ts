@@ -29,17 +29,7 @@ function concat(...arrs: Uint8Array[]): Uint8Array {
   return out;
 }
 
-// Build PKCS8 wrapper for raw P-256 private key (32 bytes)
-function rawToPkcs8(raw: Uint8Array): Uint8Array {
-  // DER prefix for P-256 private key in PKCS8 format
-  const prefix = new Uint8Array([
-    0x30, 0x41, 0x02, 0x01, 0x00, 0x30, 0x13, 0x06, 0x07,
-    0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08,
-    0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x04,
-    0x27, 0x30, 0x25, 0x02, 0x01, 0x01, 0x04, 0x20,
-  ]);
-  return concat(prefix, raw);
-}
+
 
 // HKDF-Expand (SHA-256)
 async function hkdfExpand(prk: Uint8Array, info: Uint8Array, len: number): Promise<Uint8Array> {
@@ -116,7 +106,7 @@ async function encryptPayload(
   return { body };
 }
 
-// VAPID JWT (RFC 8292) — uses PKCS8 import to fix the raw key issue
+// VAPID JWT (RFC 8292) — uses standard JWK format for robust cross-platform compatibility
 async function createVapidJWT(audience: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const header = b64uEncode(new TextEncoder().encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
@@ -125,9 +115,20 @@ async function createVapidJWT(audience: string): Promise<string> {
   })));
   const input = `${header}.${body}`;
 
+  const pubBytes = b64uDecode(VAPID_PUBLIC_KEY);
+  const privBytes = b64uDecode(VAPID_PRIVATE_KEY);
+
+  const jwk = {
+    kty: "EC",
+    crv: "P-256",
+    x: b64uEncode(pubBytes.subarray(1, 33)),
+    y: b64uEncode(pubBytes.subarray(33, 65)),
+    d: b64uEncode(privBytes),
+  };
+
   const privKey = await crypto.subtle.importKey(
-    "pkcs8",
-    rawToPkcs8(b64uDecode(VAPID_PRIVATE_KEY)),
+    "jwk",
+    jwk,
     { name: "ECDSA", namedCurve: "P-256" },
     false,
     ["sign"],
