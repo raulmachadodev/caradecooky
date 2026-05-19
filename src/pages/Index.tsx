@@ -9,20 +9,24 @@ import { useCart } from "@/context/CartContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Instagram, MessageCircle, ShoppingBag } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const { count } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, isAdmin, loading } = useAuth();
 
   // Redirect to Admin if launched in standalone PWA mode on an admin device
   useEffect(() => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
     const isAdminDevice = localStorage.getItem("is_admin_device") === "true";
-    if (isStandalone && isAdminDevice) {
+    const loggedInAdmin = !loading && user && isAdmin;
+
+    if (isStandalone && (isAdminDevice || loggedInAdmin)) {
       navigate("/admin");
     }
-  }, [navigate]);
+  }, [navigate, user, isAdmin, loading]);
 
   useEffect(() => {
     if (location.hash) {

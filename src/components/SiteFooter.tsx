@@ -1,4 +1,5 @@
 import { Heart, Phone, Instagram } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function SiteFooter() {
   return (
@@ -57,6 +58,9 @@ export function SiteFooter() {
           <p className="mt-1">
             © 2024 Cara de Cooky Gourmet® · Todos os direitos reservados.
           </p>
+          <Link to="/admin" className="mt-1 text-[10px] text-primary-foreground/40 hover:text-secondary transition-colors underline">
+            Painel do Administrador
+          </Link>
         </div>
       </div>
     </footer>
