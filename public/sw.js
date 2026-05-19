@@ -29,24 +29,16 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: '/favicon.png',
-    badge: '/favicon.png',
+    icon: '/logo.png',
     tag: `order-${data.orderId || Date.now()}`,
-    renotify: true,
-    requireInteraction: true,
-    vibrate: [200, 100, 200, 100, 200],
     data: {
       url: '/admin',
       orderId: data.orderId,
     },
-    actions: [
-      { action: 'view', title: '👀 Ver pedido' },
-      { action: 'dismiss', title: 'Fechar' },
-    ],
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(data.title || '🍪 Cara de Cooky', options)
   );
 });
 
