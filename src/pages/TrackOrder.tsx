@@ -189,10 +189,15 @@ export default function TrackOrder() {
                   </p>
                 </div>
 
-                <div className="mb-8">
-                  <div className="rounded-2xl bg-secondary/5 p-4 border border-secondary/10 w-full">
+                <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-2xl bg-secondary/5 p-4 border border-secondary/10 w-full flex flex-col justify-center">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Entrega prevista</p>
                     <p className="font-bold text-primary">{order.delivery_date.split('-').reverse().join('/')}</p>
+                  </div>
+                  <div className="rounded-2xl bg-secondary/5 p-4 border border-secondary/10 w-full flex flex-col justify-center text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Cliente</p>
+                    <p className="font-bold text-primary truncate">{order.customer_name}</p>
+                    <p className="text-xs text-muted-foreground font-semibold mt-1">{order.customer_phone}</p>
                   </div>
                 </div>
 
@@ -231,6 +236,14 @@ export default function TrackOrder() {
                         ))}
                       </ul>
                       <div className="mt-6 flex flex-col gap-3 border-t border-border/50 pt-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Cliente</span>
+                          <span className="text-sm font-medium text-foreground text-right max-w-[60%] leading-tight truncate">{order.customer_name}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">WhatsApp</span>
+                          <span className="text-sm font-medium text-foreground text-right max-w-[60%] leading-tight">{order.customer_phone}</span>
+                        </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Endereço</span>
                           <span className="text-sm font-medium text-foreground text-right max-w-[60%] leading-tight">{order.delivery_address || "Retirada no local"}</span>
