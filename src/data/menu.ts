@@ -34,9 +34,9 @@ export const FLAVORS: Flavor[] = [
   { key: "nutella", name: "Nutella" },
   { key: "rafaello", name: "Rafaello", premium: true },
   { key: "pistache", name: "Pistache" },
+  { key: "moca_brigadeiro", name: "Moça Brigadeiro", premium: true },
   { key: "cappuccino", name: "Dark Cappuccino" },
   { key: "kinder", name: "Kinder", premium: true },
-  { key: "moca_brigadeiro", name: "Moça Brigadeiro", premium: true },
 ];
 
 export const CATEGORIES: Category[] = [
@@ -54,15 +54,15 @@ export const CATEGORIES: Category[] = [
     tagline: "Massa de cookie + recheio cremoso. Pra dividir... ou não.",
     pricing: "fixed",
     size: "200g",
-    prices: { nutella: 18.5, rafaello: 20.0, pistache: 18.0, cappuccino: 17.0, kinder: 26.0, moca_brigadeiro: 22.0 },
+    prices: { nutella: 18.5, rafaello: 20.0, pistache: 18.0, cappuccino: 17.0, kinder: 26.0, moca_brigadeiro: 16.50 },
   },
   {
     slug: "marmita-500g",
     name: "Marmita Grande",
     tagline: "Versão família — pura indulgência.",
     pricing: "fixed",
-    size: "500g",
-    prices: { nutella: 25.0, rafaello: 28.0, pistache: 20.0, cappuccino: 19.0, kinder: 37.0, moca_brigadeiro: 32.0 },
+    size: "400g a 500g",
+    prices: { nutella: 25.0, rafaello: 28.0, pistache: 20.0, cappuccino: 19.0, kinder: 37.0, moca_brigadeiro: 19.90 },
   },
   {
     slug: "torta-cookie",
@@ -70,7 +70,7 @@ export const CATEGORIES: Category[] = [
     tagline: "Torta inteira de cookie pra comemorar do seu jeito.",
     pricing: "per_kg",
     sizes: [
-      { label: "500g", grams: 500 },
+      { label: "400g a 500g", grams: 500 },
       { label: "1kg", grams: 1000 },
       { label: "1,5kg", grams: 1500 },
     ],
