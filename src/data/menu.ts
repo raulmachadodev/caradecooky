@@ -1,6 +1,6 @@
 // Catálogo da Cara de Cooky Gourmet — extraído do cardápio oficial.
 
-export type FlavorKey = "nutella" | "rafaello" | "pistache" | "cappuccino" | "kinder";
+export type FlavorKey = "nutella" | "rafaello" | "pistache" | "cappuccino" | "kinder" | "moca_brigadeiro";
 
 export interface Flavor {
   key: FlavorKey;
@@ -36,6 +36,7 @@ export const FLAVORS: Flavor[] = [
   { key: "pistache", name: "Pistache" },
   { key: "cappuccino", name: "Dark Cappuccino" },
   { key: "kinder", name: "Kinder", premium: true },
+  { key: "moca_brigadeiro", name: "Moça Brigadeiro", premium: true },
 ];
 
 export const CATEGORIES: Category[] = [
@@ -45,7 +46,7 @@ export const CATEGORIES: Category[] = [
     tagline: "O clássico recheado, no tamanho perfeito pra um café.",
     pricing: "fixed",
     size: "100g",
-    prices: { nutella: 12.0, rafaello: 13.0, pistache: 9.9, cappuccino: 7.99, kinder: 16.0 },
+    prices: { nutella: 12.0, rafaello: 13.0, pistache: 9.9, cappuccino: 7.99, kinder: 16.0, moca_brigadeiro: 0 },
   },
   {
     slug: "marmita-200g",
@@ -53,7 +54,7 @@ export const CATEGORIES: Category[] = [
     tagline: "Massa de cookie + recheio cremoso. Pra dividir... ou não.",
     pricing: "fixed",
     size: "200g",
-    prices: { nutella: 18.5, rafaello: 20.0, pistache: 18.0, cappuccino: 17.0, kinder: 26.0 },
+    prices: { nutella: 18.5, rafaello: 20.0, pistache: 18.0, cappuccino: 17.0, kinder: 26.0, moca_brigadeiro: 22.0 },
   },
   {
     slug: "marmita-500g",
@@ -61,7 +62,7 @@ export const CATEGORIES: Category[] = [
     tagline: "Versão família — pura indulgência.",
     pricing: "fixed",
     size: "500g",
-    prices: { nutella: 25.0, rafaello: 28.0, pistache: 20.0, cappuccino: 19.0, kinder: 37.0 },
+    prices: { nutella: 25.0, rafaello: 28.0, pistache: 20.0, cappuccino: 19.0, kinder: 37.0, moca_brigadeiro: 32.0 },
   },
   {
     slug: "torta-cookie",
@@ -73,7 +74,7 @@ export const CATEGORIES: Category[] = [
       { label: "1kg", grams: 1000 },
       { label: "1,5kg", grams: 1500 },
     ],
-    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0 },
+    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0 },
   },
 ];
 

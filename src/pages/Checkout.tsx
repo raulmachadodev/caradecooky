@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Trash2, Minus, Plus, ArrowLeft, CheckCircle2, User, RefreshCw, Package } from "lucide-react";
+import { Trash2, Minus, Plus, ArrowLeft, CheckCircle2, User, RefreshCw, Package, CreditCard, Coins, QrCode } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatBRL } from "@/data/menu";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,7 @@ const Checkout = () => {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   
   const [phone, setPhone] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "credito" | "debito" | "dinheiro">("pix");
 
   useEffect(() => {
     async function loadConfig() {
@@ -201,7 +202,7 @@ const Checkout = () => {
         delivery_address: `${parsed.data.address_combined}${parsed.data.complement ? ` - ${parsed.data.complement}` : ""}`,
         delivery_date: parsed.data.delivery_date,
         delivery_time: "tarde",
-        payment_method: "pix",
+        payment_method: paymentMethod,
         items: items.map((i) => ({
           category: i.categoryName,
           size: i.size,
@@ -291,13 +292,75 @@ const Checkout = () => {
                 <Label htmlFor="delivery_date">Data de Entrega</Label>
                 <Input id="delivery_date" name="delivery_date" type="date" required min={today} value={selectedDate} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
               </div>
+              
+              <div className="space-y-2">
+                <Label>Forma de Pagamento</Label>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("pix")}
+                    className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all duration-300 ${
+                      paymentMethod === "pix"
+                        ? "bg-gradient-gold text-primary shadow-glow font-bold border-transparent scale-[1.02]"
+                        : "border-border bg-background text-primary hover:bg-muted/20"
+                    }`}
+                  >
+                    <QrCode className="h-5 w-5 shrink-0" />
+                    <span className="text-sm">PIX</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("debito")}
+                    className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all duration-300 ${
+                      paymentMethod === "debito"
+                        ? "bg-gradient-gold text-primary shadow-glow font-bold border-transparent scale-[1.02]"
+                        : "border-border bg-background text-primary hover:bg-muted/20"
+                    }`}
+                  >
+                    <CreditCard className="h-5 w-5 shrink-0" />
+                    <span className="text-sm">Débito</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("credito")}
+                    className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all duration-300 ${
+                      paymentMethod === "credito"
+                        ? "bg-gradient-gold text-primary shadow-glow font-bold border-transparent scale-[1.02]"
+                        : "border-border bg-background text-primary hover:bg-muted/20"
+                    }`}
+                  >
+                    <CreditCard className="h-5 w-5 shrink-0" />
+                    <span className="text-sm">Crédito</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("dinheiro")}
+                    className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all duration-300 ${
+                      paymentMethod === "dinheiro"
+                        ? "bg-gradient-gold text-primary shadow-glow font-bold border-transparent scale-[1.02]"
+                        : "border-border bg-background text-primary hover:bg-muted/20"
+                    }`}
+                  >
+                    <Coins className="h-5 w-5 shrink-0" />
+                    <span className="text-sm">Dinheiro</span>
+                  </button>
+                </div>
+              </div>
+
               <Textarea id="notes" name="notes" rows={2} maxLength={500} placeholder="Observações (ex: troco, ponto de referência)" />
               
               <div className="rounded-xl bg-muted/40 p-4 text-[11px] text-muted-foreground border border-border/50">
                 <p className="mb-2 font-bold text-primary uppercase tracking-widest text-[10px]">Forma de Pagamento e Entrega</p>
                 <ul className="space-y-1">
-                  <li>• <strong>Pagamento Exclusivo via PIX:</strong> isabellyfr2000@gmail.com</li>
-                  <li>• Envie o comprovante via WhatsApp após finalizar o pedido</li>
+                  {paymentMethod === "pix" && (
+                    <>
+                      <li>• <strong>Chave PIX para pagamento:</strong> isabellyfr2000@gmail.com</li>
+                      <li>• Envie o comprovante via WhatsApp após finalizar o pedido</li>
+                    </>
+                  )}
                   <li>• <strong>Taxa de Entrega:</strong> A combinar de acordo com a região</li>
                 </ul>
               </div>

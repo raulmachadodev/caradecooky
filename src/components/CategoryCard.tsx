@@ -88,8 +88,17 @@ export function CategoryCard({ category }: Props) {
       )}
 
       <ul className="space-y-2">
-        {FLAVORS.map((f) => {
+        {FLAVORS.filter((f) => {
+          if (f.key === "moca_brigadeiro") {
+            return category.slug === "marmita-200g" || category.slug === "marmita-500g";
+          }
+          return true;
+        }).map((f) => {
           const price = calcUnitPrice(category, f.key, currentGrams);
+          const isSoldOut =
+            f.key === "cappuccino" ||
+            f.key === "kinder";
+
           return (
             <li
               key={f.key}
@@ -122,15 +131,20 @@ export function CategoryCard({ category }: Props) {
                     Edição especial limitada esgotada
                   </span>
                 )}
+                {f.key === "moca_brigadeiro" && isSoldOut && (
+                  <span className="mt-0.5 text-[10px] font-medium italic text-muted-foreground">
+                    Edição especial esgotada
+                  </span>
+                )}
               </div>
               <Button
                 size="sm"
                 variant="secondary"
-                disabled={f.key === "cappuccino" || f.key === "kinder"}
+                disabled={isSoldOut}
                 onClick={() => handleAdd(f.key, f.name, !!f.premium)}
                 className={cn(
                   "h-8 shrink-0 gap-1.5 rounded-full px-4 font-semibold transition-colors",
-                  f.key === "cappuccino" || f.key === "kinder"
+                  isSoldOut
                     ? "bg-muted text-muted-foreground cursor-not-allowed opacity-90 grayscale-[0.5] hover:bg-muted hover:text-muted-foreground"
                     : "text-primary hover:bg-primary hover:text-primary-foreground"
                 )}
