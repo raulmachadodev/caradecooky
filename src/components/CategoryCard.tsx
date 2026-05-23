@@ -97,8 +97,7 @@ export function CategoryCard({ category }: Props) {
           const price = calcUnitPrice(category, f.key, currentGrams);
           const isSoldOut =
             f.key === "cappuccino" ||
-            f.key === "kinder" ||
-            (f.key === "moca_brigadeiro" && category.slug === "marmita-500g");
+            f.key === "kinder";
 
           return (
             <li

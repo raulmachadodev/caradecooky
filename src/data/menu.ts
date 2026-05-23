@@ -70,7 +70,7 @@ export const CATEGORIES: Category[] = [
     tagline: "Torta inteira de cookie pra comemorar do seu jeito.",
     pricing: "per_kg",
     sizes: [
-      { label: "400g a 500g", grams: 500 },
+      { label: "500g", grams: 500 },
       { label: "1kg", grams: 1000 },
       { label: "1,5kg", grams: 1500 },
     ],
