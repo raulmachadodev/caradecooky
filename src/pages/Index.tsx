@@ -96,10 +96,13 @@ const Index = () => {
           </header>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-            {CATEGORIES.map((cat) => (
+            {CATEGORIES.filter((cat) => cat.slug !== "torta-cookie").map((cat) => (
               <CategoryCard key={cat.slug} category={cat} />
             ))}
             <BrownieCard />
+            {CATEGORIES.filter((cat) => cat.slug === "torta-cookie").map((cat) => (
+              <CategoryCard key={cat.slug} category={cat} />
+            ))}
           </div>
         </section>
 

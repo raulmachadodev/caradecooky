@@ -95,27 +95,6 @@ export function BrownieCard() {
         Com opção de cobertura.
       </p>
 
-      {/* Stock badge */}
-      <div
-        className={cn(
-          "mb-5 flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold",
-          outOfStock
-            ? "border-destructive/40 bg-destructive/10 text-destructive"
-            : remaining === 1
-            ? "border-orange-400/50 bg-orange-400/10 text-orange-600"
-            : "border-amber-500/40 bg-amber-500/10 text-amber-700"
-        )}
-      >
-        <span
-          className={cn(
-            "flex h-2 w-2 rounded-full",
-            outOfStock ? "bg-destructive" : "bg-amber-500 animate-pulse"
-          )}
-        />
-        {outOfStock
-          ? "Esgotado no carrinho (máx. 3 unidades)"
-          : `⚠️ Estoque limitado — apenas ${remaining} unidade${remaining !== 1 ? "s" : ""} disponível${remaining !== 1 ? "s" : ""}!`}
-      </div>
 
       {/* Options */}
       <ul className="space-y-2">
