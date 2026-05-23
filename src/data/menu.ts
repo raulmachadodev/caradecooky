@@ -34,7 +34,7 @@ export const FLAVORS: Flavor[] = [
   { key: "nutella", name: "Nutella" },
   { key: "rafaello", name: "Rafaello", premium: true },
   { key: "pistache", name: "Pistache" },
-  { key: "moca_brigadeiro", name: "Moça Brigadeiro", premium: true },
+  { key: "moca_brigadeiro", name: "Moça Brigadeiro" },
   { key: "cappuccino", name: "Dark Cappuccino" },
   { key: "kinder", name: "Kinder", premium: true },
 ];

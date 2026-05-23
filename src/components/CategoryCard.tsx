@@ -90,14 +90,15 @@ export function CategoryCard({ category }: Props) {
       <ul className="space-y-2">
         {FLAVORS.filter((f) => {
           if (f.key === "moca_brigadeiro") {
-            return category.slug === "marmita-200g";
+            return category.slug === "marmita-200g" || category.slug === "marmita-500g";
           }
           return true;
         }).map((f) => {
           const price = calcUnitPrice(category, f.key, currentGrams);
           const isSoldOut =
             f.key === "cappuccino" ||
-            f.key === "kinder";
+            f.key === "kinder" ||
+            (f.key === "moca_brigadeiro" && category.slug === "marmita-500g");
 
           return (
             <li
