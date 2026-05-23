@@ -90,7 +90,7 @@ export function CategoryCard({ category }: Props) {
       <ul className="space-y-2">
         {FLAVORS.filter((f) => {
           if (f.key === "moca_brigadeiro") {
-            return category.slug === "marmita-200g" || category.slug === "marmita-500g";
+            return category.slug === "marmita-200g";
           }
           return true;
         }).map((f) => {
