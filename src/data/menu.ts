@@ -1,6 +1,6 @@
 // Catálogo da Cara de Cooky Gourmet — extraído do cardápio oficial.
 
-export type FlavorKey = "nutella" | "rafaello" | "pistache" | "cappuccino" | "kinder" | "moca_brigadeiro";
+export type FlavorKey = "nutella" | "rafaello" | "pistache" | "cappuccino" | "kinder" | "moca_brigadeiro" | "buenotella";
 
 export interface Flavor {
   key: FlavorKey;
@@ -28,15 +28,17 @@ export interface Category {
   sizes?: CategorySize[];
   /** preços por sabor (em reais). Quando per_kg, é o preço/kg */
   prices: Record<FlavorKey, number>;
+  unavailableFlavors?: FlavorKey[];
 }
 
 export const FLAVORS: Flavor[] = [
   { key: "nutella", name: "Nutella" },
-  { key: "rafaello", name: "Rafaello", premium: true },
+  { key: "rafaello", name: "Raffaello", premium: true },
   { key: "pistache", name: "Pistache" },
   { key: "moca_brigadeiro", name: "Moça Brigadeiro" },
   { key: "cappuccino", name: "Dark Cappuccino" },
   { key: "kinder", name: "Kinder", premium: true },
+  { key: "buenotella", name: "Buenotella", premium: true },
 ];
 
 export const CATEGORIES: Category[] = [
@@ -46,7 +48,7 @@ export const CATEGORIES: Category[] = [
     tagline: "O clássico recheado, no tamanho perfeito pra um café.",
     pricing: "fixed",
     size: "100g",
-    prices: { nutella: 12.0, rafaello: 13.0, pistache: 9.9, cappuccino: 7.99, kinder: 16.0, moca_brigadeiro: 0 },
+    prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0 },
   },
   {
     slug: "marmita-200g",
@@ -54,7 +56,8 @@ export const CATEGORIES: Category[] = [
     tagline: "Massa de cookie + recheio cremoso. Pra dividir... ou não.",
     pricing: "fixed",
     size: "200g",
-    prices: { nutella: 18.5, rafaello: 20.0, pistache: 18.0, cappuccino: 17.0, kinder: 26.0, moca_brigadeiro: 16.50 },
+    prices: { nutella: 18.5, rafaello: 27.0, pistache: 18.0, cappuccino: 17.0, kinder: 30.0, moca_brigadeiro: 16.50, buenotella: 25.0 },
+    unavailableFlavors: ["cappuccino", "moca_brigadeiro"],
   },
   {
     slug: "marmita-500g",
@@ -62,7 +65,8 @@ export const CATEGORIES: Category[] = [
     tagline: "Versão família — pura indulgência.",
     pricing: "fixed",
     size: "400g a 500g",
-    prices: { nutella: 25.0, rafaello: 28.0, pistache: 20.0, cappuccino: 19.0, kinder: 37.0, moca_brigadeiro: 19.90 },
+    prices: { nutella: 25.0, rafaello: 37.80, pistache: 20.0, cappuccino: 19.0, kinder: 42.70, moca_brigadeiro: 19.90, buenotella: 35.0 },
+    unavailableFlavors: ["cappuccino", "moca_brigadeiro"],
   },
   {
     slug: "torta-cookie",
@@ -74,7 +78,8 @@ export const CATEGORIES: Category[] = [
       { label: "1kg", grams: 1000 },
       { label: "1,5kg", grams: 1500 },
     ],
-    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0 },
+    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0, buenotella: 0 },
+    unavailableFlavors: ["cappuccino", "kinder"],
   },
 ];
 

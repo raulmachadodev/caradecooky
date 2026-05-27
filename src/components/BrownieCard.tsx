@@ -63,7 +63,7 @@ export function BrownieCard() {
         tagline: "Brownie artesanal meio amargo.",
         pricing: "fixed",
         size: "Unidade",
-        prices: { nutella: BROWNIE_PRICE, rafaello: BROWNIE_PRICE, pistache: BROWNIE_PRICE, cappuccino: BROWNIE_PRICE, kinder: BROWNIE_PRICE },
+        prices: { nutella: BROWNIE_PRICE, rafaello: BROWNIE_PRICE, pistache: BROWNIE_PRICE, cappuccino: BROWNIE_PRICE, kinder: BROWNIE_PRICE, moca_brigadeiro: 0, buenotella: 0 },
       },
       flavor: "nutella", // placeholder key — display name overrides in cart
       flavorName: option.label,

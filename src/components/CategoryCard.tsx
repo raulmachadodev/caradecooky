@@ -89,15 +89,11 @@ export function CategoryCard({ category }: Props) {
 
       <ul className="space-y-2">
         {FLAVORS.filter((f) => {
-          if (f.key === "moca_brigadeiro") {
-            return category.slug === "marmita-200g" || category.slug === "marmita-500g";
-          }
-          return true;
+          const price = category.prices[f.key];
+          return price !== undefined && price > 0;
         }).map((f) => {
           const price = calcUnitPrice(category, f.key, currentGrams);
-          const isSoldOut =
-            f.key === "cappuccino" ||
-            f.key === "kinder";
+          const isSoldOut = category.unavailableFlavors?.includes(f.key) ?? false;
 
           return (
             <li
@@ -121,19 +117,9 @@ export function CategoryCard({ category }: Props) {
                     </span>
                   )}
                 </span>
-                {f.key === "cappuccino" && (
+                {isSoldOut && (
                   <span className="mt-0.5 text-[10px] font-medium italic text-muted-foreground">
                     Esgotado ou indisponível
-                  </span>
-                )}
-                {f.key === "kinder" && (
-                  <span className="mt-0.5 text-[10px] font-medium italic text-muted-foreground">
-                    Edição especial limitada esgotada
-                  </span>
-                )}
-                {f.key === "moca_brigadeiro" && isSoldOut && (
-                  <span className="mt-0.5 text-[10px] font-medium italic text-muted-foreground">
-                    Edição especial esgotada
                   </span>
                 )}
               </div>
