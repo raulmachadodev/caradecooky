@@ -44,8 +44,8 @@ export const FLAVORS: Flavor[] = [
 export const CATEGORIES: Category[] = [
   {
     slug: "bola-cookie",
-    name: "Bola Cookie",
-    tagline: "O clássico recheado, no tamanho perfeito pra um café.",
+    name: "Bola Cookie & Brownie",
+    tagline: "O clássico recheado e nosso brownie artesanal.",
     pricing: "fixed",
     size: "100g",
     prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0 },
@@ -55,7 +55,7 @@ export const CATEGORIES: Category[] = [
     name: "Marmita",
     tagline: "Massa de cookie + recheio cremoso. Pra dividir... ou não.",
     pricing: "fixed",
-    size: "200g",
+    size: "Pequena",
     prices: { nutella: 18.5, rafaello: 27.0, pistache: 18.0, cappuccino: 17.0, kinder: 30.0, moca_brigadeiro: 16.50, buenotella: 25.0 },
     unavailableFlavors: ["cappuccino", "moca_brigadeiro"],
   },
@@ -64,8 +64,8 @@ export const CATEGORIES: Category[] = [
     name: "Marmita Grande",
     tagline: "Versão família — pura indulgência.",
     pricing: "fixed",
-    size: "400g a 500g",
-    prices: { nutella: 25.0, rafaello: 37.80, pistache: 20.0, cappuccino: 19.0, kinder: 42.70, moca_brigadeiro: 19.90, buenotella: 35.0 },
+    size: "Grande",
+    prices: { nutella: 25.0, rafaello: 37.0, pistache: 20.0, cappuccino: 19.0, kinder: 42.0, moca_brigadeiro: 19.90, buenotella: 35.0 },
     unavailableFlavors: ["cappuccino", "moca_brigadeiro"],
   },
   {
@@ -78,7 +78,7 @@ export const CATEGORIES: Category[] = [
       { label: "1kg", grams: 1000 },
       { label: "1,5kg", grams: 1500 },
     ],
-    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0, buenotella: 0 },
+    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0, buenotella: 180.0 },
     unavailableFlavors: ["cappuccino", "kinder"],
   },
 ];
