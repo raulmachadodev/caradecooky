@@ -44,15 +44,23 @@ export const FLAVORS: Flavor[] = [
 export const CATEGORIES: Category[] = [
   {
     slug: "bola-cookie",
-    name: "Bola Cookie & Brownie",
-    tagline: "O clássico recheado e nosso brownie artesanal.",
+    name: "Bola Cookie",
+    tagline: "O clássico recheado.",
     pricing: "fixed",
     size: "100g",
     prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0 },
   },
   {
+    slug: "mini-bola-cookie",
+    name: "Mini Bola Cookie",
+    tagline: "Mini cookies recheados perfeitos para dividir.",
+    pricing: "fixed",
+    size: "5 unidades",
+    prices: { nutella: 15.0, rafaello: 0, pistache: 15.0, cappuccino: 15.0, kinder: 0, moca_brigadeiro: 15.0, buenotella: 0 },
+  },
+  {
     slug: "marmita-200g",
-    name: "Marmita",
+    name: "Marmita Pequena",
     tagline: "Massa de cookie + recheio cremoso. Pra dividir... ou não.",
     pricing: "fixed",
     size: "Pequena",
