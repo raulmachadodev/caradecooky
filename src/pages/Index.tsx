@@ -118,13 +118,35 @@ const Index = () => {
           </header>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-            {CATEGORIES.filter((cat) => cat.slug !== "torta-cookie" && !productionConfig.disabled_categories.includes(cat.slug)).map((cat) => (
+            {/* Coluna 1 combinada: Bola Cookie + Brownie */}
+            {(!productionConfig.disabled_categories.includes("bola-cookie") || 
+              !productionConfig.disabled_categories.includes("brownie")) && (
+              <div className="flex flex-col gap-6">
+                {CATEGORIES.filter(
+                  (cat) => cat.slug === "bola-cookie" && !productionConfig.disabled_categories.includes(cat.slug)
+                ).map((cat) => (
+                  <CategoryCard key={cat.slug} category={cat} productionConfig={productionConfig} />
+                ))}
+                {!productionConfig.disabled_categories.includes("brownie") && (
+                  <BrownieCard productionConfig={productionConfig} />
+                )}
+              </div>
+            )}
+
+            {/* Restante das categorias (Marmitas) */}
+            {CATEGORIES.filter(
+              (cat) =>
+                cat.slug !== "bola-cookie" &&
+                cat.slug !== "torta-cookie" &&
+                !productionConfig.disabled_categories.includes(cat.slug)
+            ).map((cat) => (
               <CategoryCard key={cat.slug} category={cat} productionConfig={productionConfig} />
             ))}
-            {!productionConfig.disabled_categories.includes("brownie") && (
-              <BrownieCard productionConfig={productionConfig} />
-            )}
-            {CATEGORIES.filter((cat) => cat.slug === "torta-cookie" && !productionConfig.disabled_categories.includes(cat.slug)).map((cat) => (
+
+            {/* Torta Cookie por último */}
+            {CATEGORIES.filter(
+              (cat) => cat.slug === "torta-cookie" && !productionConfig.disabled_categories.includes(cat.slug)
+            ).map((cat) => (
               <CategoryCard key={cat.slug} category={cat} productionConfig={productionConfig} />
             ))}
           </div>
