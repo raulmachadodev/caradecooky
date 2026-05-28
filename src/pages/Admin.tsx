@@ -39,7 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatBRL } from "@/data/menu";
+import { formatBRL, CATEGORIES, FLAVORS } from "@/data/menu";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -80,6 +80,12 @@ interface OrderRow {
 interface DeliveryConfig {
   allowed_weekdays: number[]; // 0-6
   blocked_dates: string[];    // YYYY-MM-DD
+}
+
+export interface ProductionConfig {
+  disabled_categories: string[];
+  disabled_sizes: string[];
+  disabled_flavors: string[];
 }
 
 const WEEKDAYS = [
@@ -351,35 +357,55 @@ const Admin = () => {
   const [dateFilter, setDateFilter] = useState<"todos" | "hoje" | "ontem" | "agendados">("todos");
   const [statusFilter, setStatusFilter] = useState<"todos" | OrderStatus>("todos");
 
-  // Configurações de entrega
+  // Configurações de entrega e produção
   const [deliveryConfig, setDeliveryConfig] = useState<DeliveryConfig>({
     allowed_weekdays: [1, 2, 3, 4, 5, 6],
     blocked_dates: [],
   });
+  const [productionConfig, setProductionConfig] = useState<ProductionConfig>({
+    disabled_categories: [],
+    disabled_sizes: [],
+    disabled_flavors: [],
+  });
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [newBlockedDate, setNewBlockedDate] = useState("");
+  const [activeTab, setActiveTab] = useState<"entregas" | "producao">("producao");
 
   async function loadConfig() {
-    const { data } = await supabase
+    const { data: deliveryData } = await supabase
       .from("site_settings")
       .select("value")
       .eq("id", "delivery_config")
       .maybeSingle();
     
-    if (data?.value) {
-      setDeliveryConfig(data.value as unknown as DeliveryConfig);
+    if (deliveryData?.value) {
+      setDeliveryConfig(deliveryData.value as unknown as DeliveryConfig);
+    }
+
+    const { data: prodData } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("id", "production_config")
+      .maybeSingle();
+
+    if (prodData?.value) {
+      setProductionConfig(prodData.value as unknown as ProductionConfig);
     }
   }
 
   async function saveConfig() {
     setIsSavingConfig(true);
-    const { error } = await supabase
+    const { error: e1 } = await supabase
       .from("site_settings")
       .upsert({ id: "delivery_config", value: deliveryConfig as any });
     
+    const { error: e2 } = await supabase
+      .from("site_settings")
+      .upsert({ id: "production_config", value: productionConfig as any });
+    
     setIsSavingConfig(false);
-    if (error) {
-      toast.error("Erro ao salvar configurações", { description: error.message });
+    if (e1 || e2) {
+      toast.error("Erro ao salvar", { description: (e1 || e2)?.message });
     } else {
       toast.success("Configurações salvas!");
     }
@@ -497,19 +523,20 @@ const Admin = () => {
       `• ${i.quantity}x ${i.category} (${i.flavor}${i.premium ? ' Premium' : ''}) - ${formatBRL(i.subtotal)}`
     ).join('\n');
 
-    const message = `Olá ${o.customer_name}! 🍪 ✨
+    const message = `Olá ${o.customer_name}! 🍪
 Sou da *Cara de Cooky Gourmet* e estou passando para confirmar seu pedido:
 
 ${itemsList}
 
 *Total: ${formatBRL(o.total)}*
-*Pagamento:* ${o.payment_method.toUpperCase()}
+*Pagamento:* ${o.payment_method.toUpperCase()}${o.payment_method === 'pix' ? ' (*Chave:* isabellyfr2000@gmail.com)' : ''}
 *Entrega:* ${o.delivery_date.split('-').reverse().join('/')}
 
 📍 *Endereço:*
 ${o.delivery_address || 'Retirada no local'}
 
-Podemos prosseguir com a produção? 🍪`;
+Caso queira acompanhar o pedido pelo site: 
+https://caradecooky.com.br/track?id=${o.id.slice(0, 8).toUpperCase()}`;
 
     const encodedMessage = encodeURIComponent(message);
     const phone = o.customer_phone.replace(/\D/g, '');
@@ -569,58 +596,173 @@ Podemos prosseguir com a produção? 🍪`;
             
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 border-secondary/30 text-primary">
+                <Button variant="outline" size="sm" className="gap-2 border-secondary/30 text-primary bg-background/50 hover:bg-secondary/10 hover:text-primary">
                   <Settings className="h-4 w-4" />
-                  <span className="hidden sm:inline">Configurar Entregas</span>
+                  <span className="hidden sm:inline">Configurar Produção</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md bg-white">
+              <DialogContent className="max-w-xl bg-white max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Configurar Dias de Entrega</DialogTitle>
-                  <DialogDescription>Selecione os dias da semana ativos e datas bloqueadas.</DialogDescription>
+                  <DialogTitle>Configurar Loja e Produção</DialogTitle>
+                  <DialogDescription>Gerencie o estoque e as datas de entrega.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-6 py-4">
-                  <div>
-                    <Label className="mb-3 block font-bold text-primary uppercase tracking-widest text-[10px]">Dias da Semana</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {WEEKDAYS.map((day) => (
-                        <div key={day.id} className="flex items-center space-x-2">
+
+                <div className="flex gap-2 border-b border-border/50 pb-2">
+                  <button 
+                    onClick={() => setActiveTab("producao")} 
+                    className={cn("px-4 py-2 text-sm font-bold rounded-t-xl transition-all", activeTab === "producao" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
+                  >
+                    Estoque & Produtos
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab("entregas")} 
+                    className={cn("px-4 py-2 text-sm font-bold rounded-t-xl transition-all", activeTab === "entregas" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
+                  >
+                    Dias de Entrega
+                  </button>
+                </div>
+
+                <div className="py-4">
+                  {activeTab === "entregas" ? (
+                    <div className="space-y-6">
+                      <div>
+                        <Label className="mb-3 block font-bold text-primary uppercase tracking-widest text-[10px]">Dias da Semana</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {WEEKDAYS.map((day) => (
+                            <div key={day.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`day-${day.id}`} 
+                                checked={deliveryConfig.allowed_weekdays.includes(day.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) setDeliveryConfig(prev => ({ ...prev, allowed_weekdays: [...prev.allowed_weekdays, day.id].sort() }));
+                                  else setDeliveryConfig(prev => ({ ...prev, allowed_weekdays: prev.allowed_weekdays.filter(d => d !== day.id) }));
+                                }}
+                              />
+                              <Label htmlFor={`day-${day.id}`} className="text-sm font-medium cursor-pointer">{day.label}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="border-t pt-6">
+                        <Label className="mb-3 block font-bold text-primary uppercase tracking-widest text-[10px]">Datas Bloqueadas</Label>
+                        <div className="flex gap-2 mb-4">
+                          <Input type="date" value={newBlockedDate} onChange={(e) => setNewBlockedDate(e.target.value)} className="flex-1" />
+                          <Button size="sm" onClick={() => {
+                            if (newBlockedDate && !deliveryConfig.blocked_dates.includes(newBlockedDate)) {
+                              setDeliveryConfig(prev => ({ ...prev, blocked_dates: [...prev.blocked_dates, newBlockedDate].sort() }));
+                              setNewBlockedDate("");
+                            }
+                          }}><Plus className="h-4 w-4" /></Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto pr-2">
+                          {deliveryConfig.blocked_dates.map(date => (
+                            <Badge key={date} variant="secondary" className="gap-1 pr-1 font-mono">
+                              {date.split('-').reverse().join('/')}
+                              <button onClick={() => setDeliveryConfig(prev => ({ ...prev, blocked_dates: prev.blocked_dates.filter(d => d !== date) }))} className="ml-1 rounded-full p-0.5"><X className="h-3 w-3" /></button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="rounded-xl border border-amber-900/20 bg-amber-50 p-4">
+                        <Label className="mb-3 block font-bold text-amber-900 uppercase tracking-widest text-[10px]">Brownies</Label>
+                        <div className="flex items-center space-x-2">
                           <Checkbox 
-                            id={`day-${day.id}`} 
-                            checked={deliveryConfig.allowed_weekdays.includes(day.id)}
+                            id="prod-brownie" 
+                            checked={!productionConfig.disabled_categories.includes("brownie")}
                             onCheckedChange={(checked) => {
-                              if (checked) setDeliveryConfig(prev => ({ ...prev, allowed_weekdays: [...prev.allowed_weekdays, day.id].sort() }));
-                              else setDeliveryConfig(prev => ({ ...prev, allowed_weekdays: prev.allowed_weekdays.filter(d => d !== day.id) }));
+                              if (checked) {
+                                setProductionConfig(prev => ({ ...prev, disabled_categories: prev.disabled_categories.filter(c => c !== "brownie") }));
+                              } else {
+                                setProductionConfig(prev => ({ ...prev, disabled_categories: [...prev.disabled_categories, "brownie"] }));
+                              }
                             }}
                           />
-                          <Label htmlFor={`day-${day.id}`} className="text-sm font-medium cursor-pointer">{day.label}</Label>
+                          <Label htmlFor="prod-brownie" className="text-sm font-bold text-amber-900 cursor-pointer">Brownie Meio Amargo Disponível</Label>
+                        </div>
+                      </div>
+
+                      {CATEGORIES.map(cat => (
+                        <div key={cat.slug} className="rounded-xl border p-4 bg-card/50">
+                          <div className="flex items-center justify-between mb-3 border-b border-border/50 pb-2">
+                            <Label className="font-bold text-primary uppercase tracking-widest text-[10px]">{cat.name}</Label>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`cat-${cat.slug}`} 
+                                checked={!productionConfig.disabled_categories.includes(cat.slug)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setProductionConfig(prev => ({ ...prev, disabled_categories: prev.disabled_categories.filter(c => c !== cat.slug) }));
+                                  } else {
+                                    setProductionConfig(prev => ({ ...prev, disabled_categories: [...prev.disabled_categories, cat.slug] }));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`cat-${cat.slug}`} className="text-xs font-bold cursor-pointer">Ativo</Label>
+                            </div>
+                          </div>
+                          
+                          <div className={cn("space-y-4 transition-opacity", productionConfig.disabled_categories.includes(cat.slug) && "opacity-50 pointer-events-none")}>
+                            {cat.sizes && (
+                              <div>
+                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Tamanhos</Label>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                  {cat.sizes.map(size => {
+                                    const sizeKey = `${cat.slug}|${size.label}`;
+                                    return (
+                                      <div key={sizeKey} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                          id={`size-${sizeKey}`} 
+                                          checked={!productionConfig.disabled_sizes.includes(sizeKey)}
+                                          onCheckedChange={(checked) => {
+                                            if (checked) setProductionConfig(prev => ({ ...prev, disabled_sizes: prev.disabled_sizes.filter(s => s !== sizeKey) }));
+                                            else setProductionConfig(prev => ({ ...prev, disabled_sizes: [...prev.disabled_sizes, sizeKey] }));
+                                          }}
+                                        />
+                                        <Label htmlFor={`size-${sizeKey}`} className="text-xs font-medium cursor-pointer">{size.label}</Label>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            <div>
+                              <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Sabores</Label>
+                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                {FLAVORS.filter(f => {
+                                  const price = cat.prices[f.key];
+                                  return price !== undefined && price > 0;
+                                }).map(f => {
+                                  const flavorKey = `${cat.slug}|${f.key}`;
+                                  return (
+                                    <div key={flavorKey} className="flex items-center space-x-2 rounded-md bg-muted/30 p-1.5">
+                                      <Checkbox 
+                                        id={`flavor-${flavorKey}`} 
+                                        checked={!productionConfig.disabled_flavors.includes(flavorKey)}
+                                        onCheckedChange={(checked) => {
+                                          if (checked) setProductionConfig(prev => ({ ...prev, disabled_flavors: prev.disabled_flavors.filter(k => k !== flavorKey) }));
+                                          else setProductionConfig(prev => ({ ...prev, disabled_flavors: [...prev.disabled_flavors, flavorKey] }));
+                                        }}
+                                      />
+                                      <Label htmlFor={`flavor-${flavorKey}`} className="text-xs font-medium cursor-pointer flex-1 truncate">{f.name}</Label>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                  <div className="border-t pt-6">
-                    <Label className="mb-3 block font-bold text-primary uppercase tracking-widest text-[10px]">Datas Bloqueadas</Label>
-                    <div className="flex gap-2 mb-4">
-                      <Input type="date" value={newBlockedDate} onChange={(e) => setNewBlockedDate(e.target.value)} className="flex-1" />
-                      <Button size="sm" onClick={() => {
-                        if (newBlockedDate && !deliveryConfig.blocked_dates.includes(newBlockedDate)) {
-                          setDeliveryConfig(prev => ({ ...prev, blocked_dates: [...prev.blocked_dates, newBlockedDate].sort() }));
-                          setNewBlockedDate("");
-                        }
-                      }}><Plus className="h-4 w-4" /></Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto pr-2">
-                      {deliveryConfig.blocked_dates.map(date => (
-                        <Badge key={date} variant="secondary" className="gap-1 pr-1 font-mono">
-                          {date.split('-').reverse().join('/')}
-                          <button onClick={() => setDeliveryConfig(prev => ({ ...prev, blocked_dates: prev.blocked_dates.filter(d => d !== date) }))} className="ml-1 rounded-full p-0.5"><X className="h-3 w-3" /></button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+                  )}
                 </div>
-                <DialogFooter>
-                  <Button className="w-full bg-gradient-chocolate" onClick={saveConfig} disabled={isSavingConfig}>{isSavingConfig ? "Salvando..." : "Salvar Alterações"}</Button>
+                <DialogFooter className="border-t border-border/50 pt-4 mt-2">
+                  <Button className="w-full bg-gradient-chocolate shadow-glow font-bold" onClick={saveConfig} disabled={isSavingConfig}>
+                    {isSavingConfig ? "Salvando..." : "Salvar Alterações Globais"}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

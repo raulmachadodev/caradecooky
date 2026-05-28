@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ProductionConfig } from "@/pages/Admin";
 
 const STOCK_LIMIT = 3;
 const BROWNIE_PRICE = 12.0;
@@ -34,9 +35,10 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 
 interface Props {
   category: Category;
+  productionConfig?: ProductionConfig;
 }
 
-export function CategoryCard({ category }: Props) {
+export function CategoryCard({ category, productionConfig }: Props) {
   const Icon = ICONS[category.slug] ?? Cookie;
   const { add, items } = useCart();
   const [selectedSize, setSelectedSize] = useState<string>(
@@ -69,10 +71,15 @@ export function CategoryCard({ category }: Props) {
   const brownieInCart = items
     .filter((i) => i.categoryName === "Brownie Meio Amargo")
     .reduce((acc, i) => acc + i.quantity, 0);
-  const brownieOutOfStock = brownieInCart >= STOCK_LIMIT;
+  const brownieDisabled = productionConfig?.disabled_categories.includes("brownie") ?? false;
+  const brownieOutOfStock = brownieInCart >= STOCK_LIMIT || brownieDisabled;
 
   const handleAddBrownie = () => {
-    if (brownieOutOfStock) {
+    if (brownieDisabled) {
+      toast.error("Indisponível", { description: "O brownie está esgotado no momento." });
+      return;
+    }
+    if (brownieInCart >= STOCK_LIMIT) {
       toast.error("Estoque esgotado!", {
         description: "Só temos 3 unidades disponíveis e você já as adicionou ao carrinho.",
       });
@@ -121,7 +128,7 @@ export function CategoryCard({ category }: Props) {
             Tamanho
           </p>
           <div className="flex flex-wrap gap-2">
-            {category.sizes.map((s) => (
+            {category.sizes.filter(s => !productionConfig?.disabled_sizes.includes(`${category.slug}|${s.label}`)).map((s) => (
               <button
                 key={s.label}
                 type="button"
@@ -148,7 +155,7 @@ export function CategoryCard({ category }: Props) {
         }).map((f) => ({
           f,
           price: calcUnitPrice(category, f.key, currentGrams),
-          isSoldOut: category.unavailableFlavors?.includes(f.key) ?? false,
+          isSoldOut: category.unavailableFlavors?.includes(f.key) || (productionConfig?.disabled_flavors.includes(`${category.slug}|${f.key}`) ?? false),
         }))].sort((a, b) => {
           if (a.isSoldOut && !b.isSoldOut) return 1;
           if (!a.isSoldOut && b.isSoldOut) return -1;
@@ -265,7 +272,7 @@ export function CategoryCard({ category }: Props) {
             )}
           >
             <Plus className="h-4 w-4" />
-            {brownieOutOfStock ? "Esgotado" : "Adicionar brownie"}
+            {brownieDisabled ? "Esgotado" : (brownieOutOfStock ? "Limite Atingido" : "Adicionar brownie")}
           </Button>
         </div>
       )}

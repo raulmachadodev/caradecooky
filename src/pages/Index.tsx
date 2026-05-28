@@ -6,9 +6,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { useCart } from "@/context/CartContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Instagram, MessageCircle, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { ProductionConfig } from "@/pages/Admin";
 
 const Index = () => {
   const { count } = useCart();
@@ -26,6 +28,26 @@ const Index = () => {
       navigate("/admin");
     }
   }, [navigate, user, isAdmin, loading]);
+
+  const [productionConfig, setProductionConfig] = useState<ProductionConfig>({
+    disabled_categories: [],
+    disabled_sizes: [],
+    disabled_flavors: [],
+  });
+
+  useEffect(() => {
+    async function loadConfig() {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("id", "production_config")
+        .maybeSingle();
+      if (data?.value) {
+        setProductionConfig(data.value as unknown as ProductionConfig);
+      }
+    }
+    loadConfig();
+  }, []);
 
   useEffect(() => {
     if (location.hash) {
@@ -95,11 +117,11 @@ const Index = () => {
           </header>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-            {CATEGORIES.filter((cat) => cat.slug !== "torta-cookie").map((cat) => (
-              <CategoryCard key={cat.slug} category={cat} />
+            {CATEGORIES.filter((cat) => cat.slug !== "torta-cookie" && !productionConfig.disabled_categories.includes(cat.slug)).map((cat) => (
+              <CategoryCard key={cat.slug} category={cat} productionConfig={productionConfig} />
             ))}
-            {CATEGORIES.filter((cat) => cat.slug === "torta-cookie").map((cat) => (
-              <CategoryCard key={cat.slug} category={cat} />
+            {CATEGORIES.filter((cat) => cat.slug === "torta-cookie" && !productionConfig.disabled_categories.includes(cat.slug)).map((cat) => (
+              <CategoryCard key={cat.slug} category={cat} productionConfig={productionConfig} />
             ))}
           </div>
         </section>
