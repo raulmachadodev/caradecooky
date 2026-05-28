@@ -1,6 +1,6 @@
 // Catálogo da Cara de Cooky Gourmet — extraído do cardápio oficial.
 
-export type FlavorKey = "nutella" | "rafaello" | "pistache" | "cappuccino" | "kinder" | "moca_brigadeiro" | "buenotella";
+export type FlavorKey = "nutella" | "rafaello" | "pistache" | "cappuccino" | "kinder" | "moca_brigadeiro" | "buenotella" | "mini_bola";
 
 export interface Flavor {
   key: FlavorKey;
@@ -39,6 +39,7 @@ export const FLAVORS: Flavor[] = [
   { key: "cappuccino", name: "Dark Cappuccino" },
   { key: "kinder", name: "Kinder", premium: true },
   { key: "buenotella", name: "Buenotella", premium: true },
+  { key: "mini_bola", name: "Mini Bola (5 un.)" },
 ];
 
 export const CATEGORIES: Category[] = [
@@ -48,15 +49,7 @@ export const CATEGORIES: Category[] = [
     tagline: "O clássico recheado.",
     pricing: "fixed",
     size: "100g",
-    prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0 },
-  },
-  {
-    slug: "mini-bola-cookie",
-    name: "Mini Bola Cookie",
-    tagline: "Mini cookies recheados perfeitos para dividir.",
-    pricing: "fixed",
-    size: "5 unidades",
-    prices: { nutella: 15.0, rafaello: 0, pistache: 15.0, cappuccino: 15.0, kinder: 0, moca_brigadeiro: 15.0, buenotella: 0 },
+    prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0, mini_bola: 15.0 },
   },
   {
     slug: "marmita-200g",
@@ -64,7 +57,7 @@ export const CATEGORIES: Category[] = [
     tagline: "Massa de cookie + recheio cremoso. Pra dividir... ou não.",
     pricing: "fixed",
     size: "Pequena",
-    prices: { nutella: 18.5, rafaello: 27.0, pistache: 18.0, cappuccino: 17.0, kinder: 30.0, moca_brigadeiro: 16.50, buenotella: 25.0 },
+    prices: { nutella: 18.5, rafaello: 27.0, pistache: 18.0, cappuccino: 17.0, kinder: 30.0, moca_brigadeiro: 16.50, buenotella: 25.0, mini_bola: 0 },
     unavailableFlavors: ["cappuccino", "moca_brigadeiro"],
   },
   {
@@ -73,7 +66,7 @@ export const CATEGORIES: Category[] = [
     tagline: "Versão família — pura indulgência.",
     pricing: "fixed",
     size: "Grande",
-    prices: { nutella: 25.0, rafaello: 37.0, pistache: 20.0, cappuccino: 19.0, kinder: 42.0, moca_brigadeiro: 19.90, buenotella: 35.0 },
+    prices: { nutella: 25.0, rafaello: 37.0, pistache: 20.0, cappuccino: 19.0, kinder: 42.0, moca_brigadeiro: 19.90, buenotella: 35.0, mini_bola: 0 },
     unavailableFlavors: ["cappuccino", "moca_brigadeiro"],
   },
   {
@@ -86,7 +79,7 @@ export const CATEGORIES: Category[] = [
       { label: "1kg", grams: 1000 },
       { label: "1,5kg", grams: 1500 },
     ],
-    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0, buenotella: 180.0 },
+    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0, buenotella: 180.0, mini_bola: 0 },
     unavailableFlavors: ["cappuccino", "kinder"],
   },
 ];
