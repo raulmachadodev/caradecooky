@@ -1,5 +1,6 @@
 import { Plus, Flame } from "lucide-react";
 import { useState } from "react";
+import { SpotlightCard } from "@/components/SpotlightCard";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
@@ -77,7 +78,10 @@ export function BrownieCard({ productionConfig }: Props) {
   }
 
   return (
-    <article className="relative overflow-hidden rounded-3xl p-6 shadow-xl flex flex-col border border-amber-900/40 bg-gradient-to-br from-[#2a1708] to-[#1a1412]">
+    <SpotlightCard 
+      as="article" 
+      className="!bg-gradient-to-br !from-[#2a1708] !to-[#1a1412] !border-amber-900/40 flex flex-col shadow-xl"
+    >
       <div className="mb-4 flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-900 to-stone-800 text-amber-200 shadow-soft">
           <Flame className="h-6 w-6" />
@@ -142,6 +146,6 @@ export function BrownieCard({ productionConfig }: Props) {
         <Plus className="h-4 w-4" />
         {brownieDisabled ? "Esgotado" : (brownieOutOfStock ? "Limite Atingido" : "Adicionar brownie")}
       </Button>
-    </article>
+    </SpotlightCard>
   );
 }
