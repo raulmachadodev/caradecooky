@@ -34,12 +34,12 @@ export interface Category {
 }
 
 export const FLAVORS: Flavor[] = [
-  { key: "nutella", name: "Nutella", description: "Massa tradicional crocante por fora e macia por dentro, com gotas de chocolate NOBRE meio amargo." },
+  { key: "nutella", name: "Nutella", description: "Massa tradicional crocante por fora e macia por dentro, com gotas de chocolate nobre meio amargo." },
   { key: "rafaello", name: "Raffaello", premium: true, description: "Massa tradicional crocante por fora e macia por dentro, com chocolate branco nobre, decorado com Raffaello e coco por cima." },
   { key: "pistache", name: "Pistache", description: "Massa tradicional crocante por fora e macia por dentro, com chocolate branco nobre, decorado com granulado." },
   { key: "moca_brigadeiro", name: "Moça Brigadeiro", description: "Massa crocante por fora e macia por dentro." },
   { key: "cappuccino", name: "Dark Cappuccino", description: "Massa dark crocante por fora e macia por dentro, com cacau 100%." },
-  { key: "kinder", name: "Kinder", premium: true, description: "Massa tradicional crocante por fora e macia por dentro, com gotas de chocolate NOBRE meio amargo, decorado com granulados e Kinder por cima." },
+  { key: "kinder", name: "Kinder", premium: true, description: "Massa tradicional crocante por fora e macia por dentro, com gotas de chocolate nobre meio amargo, decorado com granulados e Kinder por cima." },
   { key: "buenotella", name: "Buenotella", premium: true, description: "Massa crocante por fora e macia por dentro." },
   { key: "mini_bola", name: "Mini", badge: "Valor promocional de lançamento", description: "Massa crocante por fora e macia por dentro." },
 ];
