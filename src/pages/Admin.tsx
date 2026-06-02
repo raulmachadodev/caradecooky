@@ -529,7 +529,7 @@ const Admin = () => {
     const paymentLabel = o.payment_method.toUpperCase();
 
     const lines = [
-      `Olá ${firstName}! 🍪`,
+      `Ola ${firstName}!`,
       `Sou da Cara de Cooky Gourmet e estou passando para confirmar seu pedido:`,
       ``,
       itemsList,
@@ -538,7 +538,7 @@ const Admin = () => {
       `Pagamento: ${paymentLabel}${pixInfo}`,
       `Entrega: ${deliveryDate} (a partir das 18h)`,
       ``,
-      `📍 Endereço:`,
+      `Endereco:`,
       `${o.delivery_address || 'Retirada no local'}`,
       ``,
       `Caso queira acompanhar o pedido pelo site:`,

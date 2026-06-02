@@ -288,9 +288,13 @@ const Checkout = () => {
               <div className="w-full">
                 <Input id="complement" name="complement" placeholder="Complemento (Opcional, ex: Bloco 2, Apto 34)" />
               </div>
-              <div>
+              <div className="space-y-1">
                 <Label htmlFor="delivery_date">Data de Entrega</Label>
                 <Input id="delivery_date" name="delivery_date" type="date" required min={today} value={selectedDate} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
+                <p className="flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs font-medium text-amber-800">
+                  <span className="text-base">&#9200;</span>
+                  Entregas realizadas <strong>a partir das 18h</strong>. Pedidos feitos para hoje serao entregues a noite.
+                </p>
               </div>
               
               <div className="space-y-2">
@@ -361,7 +365,8 @@ const Checkout = () => {
                       <li>• Envie o comprovante via WhatsApp após finalizar o pedido</li>
                     </>
                   )}
-                  <li>• <strong>Taxa de Entrega:</strong> A combinar de acordo com a região</li>
+                  <li>• <strong>Horario de Entrega:</strong> A partir das 18h</li>
+                  <li>• <strong>Taxa de Entrega:</strong> A combinar de acordo com a regiao</li>
                 </ul>
               </div>
 
