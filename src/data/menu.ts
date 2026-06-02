@@ -6,6 +6,8 @@ export interface Flavor {
   key: FlavorKey;
   name: string;
   premium?: boolean;
+  description?: string;
+  badge?: string;
 }
 
 export interface CategorySize {
@@ -32,14 +34,14 @@ export interface Category {
 }
 
 export const FLAVORS: Flavor[] = [
-  { key: "nutella", name: "Nutella" },
-  { key: "rafaello", name: "Raffaello", premium: true },
-  { key: "pistache", name: "Pistache" },
-  { key: "moca_brigadeiro", name: "Moça Brigadeiro" },
-  { key: "cappuccino", name: "Dark Cappuccino" },
-  { key: "kinder", name: "Kinder", premium: true },
-  { key: "buenotella", name: "Buenotella", premium: true },
-  { key: "mini_bola", name: "Mini Bola (5 un.)" },
+  { key: "nutella", name: "Nutella", description: "Massa tradicional crocante por fora e macia por dentro, com gotas de chocolate NOBRE meio amargo." },
+  { key: "rafaello", name: "Raffaello", premium: true, description: "Massa tradicional crocante por fora e macia por dentro, com chocolate branco nobre, decorado com Raffaello e coco por cima." },
+  { key: "pistache", name: "Pistache", description: "Massa tradicional crocante por fora e macia por dentro, com chocolate branco nobre, decorado com granulado." },
+  { key: "moca_brigadeiro", name: "Moça Brigadeiro", description: "Massa crocante por fora e macia por dentro." },
+  { key: "cappuccino", name: "Dark Cappuccino", description: "Massa dark crocante por fora e macia por dentro, com cacau 100%." },
+  { key: "kinder", name: "Kinder", premium: true, description: "Massa tradicional crocante por fora e macia por dentro, com gotas de chocolate NOBRE meio amargo, decorado com granulados e Kinder por cima." },
+  { key: "buenotella", name: "Buenotella", premium: true, description: "Massa crocante por fora e macia por dentro." },
+  { key: "mini_bola", name: "Mini", badge: "Valor promocional de lançamento", description: "Massa crocante por fora e macia por dentro." },
 ];
 
 export const CATEGORIES: Category[] = [
@@ -49,7 +51,7 @@ export const CATEGORIES: Category[] = [
     tagline: "O clássico recheado.",
     pricing: "fixed",
     size: "100g",
-    prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0, mini_bola: 15.0 },
+    prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0, mini_bola: 9.90 },
   },
   {
     slug: "marmita-200g",

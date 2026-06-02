@@ -110,15 +110,20 @@ export function CategoryCard({ category, productionConfig }: Props) {
             className="flex items-center justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2 transition-colors hover:bg-muted"
           >
             <div className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-medium text-foreground">
+              <span className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-foreground">
                 {f.name}
                 {f.premium && (
-                  <span className="ml-2 rounded-full bg-secondary/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
+                  <span className="rounded-full bg-secondary/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
                     Premium
                   </span>
                 )}
+                {f.badge && (
+                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                    {f.badge}
+                  </span>
+                )}
               </span>
-              <span className="text-sm font-bold text-primary">
+              <span className="text-sm font-bold text-primary mt-1">
                 {formatBRL(price)}
                 {category.pricing === "per_kg" && (
                   <span className="ml-1 text-[10px] font-medium uppercase text-muted-foreground">
@@ -126,8 +131,13 @@ export function CategoryCard({ category, productionConfig }: Props) {
                   </span>
                 )}
               </span>
+              {f.description && (
+                <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground/70">
+                  {f.description}
+                </p>
+              )}
               {isSoldOut && (
-                <span className="mt-0.5 text-[10px] font-medium italic text-muted-foreground">
+                <span className="mt-1 text-[10px] font-medium italic text-muted-foreground">
                   Esgotado ou indisponível
                 </span>
               )}
