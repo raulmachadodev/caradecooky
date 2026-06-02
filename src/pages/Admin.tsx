@@ -519,24 +519,33 @@ const Admin = () => {
       parsedItems = [];
     }
 
-    const itemsList = parsedItems.map(i => 
-      `• ${i.quantity}x ${i.category} (${i.flavor}${i.premium ? ' Premium' : ''}) - ${formatBRL(i.subtotal)}`
+    const itemsList = parsedItems.map((i: any) =>
+      `* ${i.quantity}x ${i.category} (${i.flavor}${i.premium ? ' Premium' : ''}) - ${formatBRL(i.subtotal)}`
     ).join('\n');
 
-    const message = `Olá ${o.customer_name}! 🍪
-Sou da *Cara de Cooky Gourmet* e estou passando para confirmar seu pedido:
+    const firstName = o.customer_name.split(' ')[0];
+    const deliveryDate = o.delivery_date.split('-').reverse().join('/');
+    const pixInfo = o.payment_method.toLowerCase() === 'pix' ? ' (Chave: isabellyfr2000@gmail.com)' : '';
+    const paymentLabel = o.payment_method.toUpperCase();
 
-${itemsList}
+    const lines = [
+      `Olá ${firstName}! 🍪`,
+      `Sou da Cara de Cooky Gourmet e estou passando para confirmar seu pedido:`,
+      ``,
+      itemsList,
+      ``,
+      `Total: ${formatBRL(o.total)}`,
+      `Pagamento: ${paymentLabel}${pixInfo}`,
+      `Entrega: ${deliveryDate} (a partir das 18h)`,
+      ``,
+      `📍 Endereço:`,
+      `${o.delivery_address || 'Retirada no local'}`,
+      ``,
+      `Caso queira acompanhar o pedido pelo site:`,
+      `https://caradecooky.com.br/track?id=${o.id.slice(0, 8).toUpperCase()}`,
+    ];
 
-*Total: ${formatBRL(o.total)}*
-*Pagamento:* ${o.payment_method.toUpperCase()}${o.payment_method === 'pix' ? ' (*Chave:* isabellyfr2000@gmail.com)' : ''}
-*Entrega:* ${o.delivery_date.split('-').reverse().join('/')}
-
-📍 *Endereço:*
-${o.delivery_address || 'Retirada no local'}
-
-Caso queira acompanhar o pedido pelo site: 
-https://caradecooky.com.br/track?id=${o.id.slice(0, 8).toUpperCase()}`;
+    const message = lines.join('\n');
 
     const encodedMessage = encodeURIComponent(message);
     const phone = o.customer_phone.replace(/\D/g, '');
