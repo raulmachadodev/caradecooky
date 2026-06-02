@@ -288,12 +288,16 @@ const Checkout = () => {
               <div className="w-full">
                 <Input id="complement" name="complement" placeholder="Complemento (Opcional, ex: Bloco 2, Apto 34)" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Label htmlFor="delivery_date">Data de Entrega</Label>
                 <Input id="delivery_date" name="delivery_date" type="date" required min={today} value={selectedDate} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
-                <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900">
-                  <p className="text-xs font-bold uppercase tracking-widest mb-0.5">Horario de entrega</p>
-                  <p className="text-sm">As entregas sao realizadas <strong>somente a partir das 18h</strong>. Nao realizamos entregas no periodo da manha ou tarde.</p>
+                <div className="rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3">
+                  <p className="text-sm text-amber-900 font-semibold leading-relaxed">
+                    Todas as entregas s&atilde;o realizadas <strong className="text-amber-950">somente no per&iacute;odo da noite, a partir das 18h</strong>.
+                  </p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    N&atilde;o realizamos entregas pela manh&atilde; ou &agrave; tarde.
+                  </p>
                 </div>
               </div>
               
