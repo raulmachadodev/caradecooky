@@ -291,10 +291,10 @@ const Checkout = () => {
               <div className="space-y-1">
                 <Label htmlFor="delivery_date">Data de Entrega</Label>
                 <Input id="delivery_date" name="delivery_date" type="date" required min={today} value={selectedDate} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
-                <p className="flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs font-medium text-amber-800">
-                  <span className="text-base">&#9200;</span>
-                  Entregas realizadas <strong>a partir das 18h</strong>. Pedidos feitos para hoje serao entregues a noite.
-                </p>
+                <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900">
+                  <p className="text-xs font-bold uppercase tracking-widest mb-0.5">Horario de entrega</p>
+                  <p className="text-sm">As entregas sao realizadas <strong>somente a partir das 18h</strong>. Nao realizamos entregas no periodo da manha ou tarde.</p>
+                </div>
               </div>
               
               <div className="space-y-2">
