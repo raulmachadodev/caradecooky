@@ -1,9 +1,10 @@
 import { Plus, Cookie, Package, Cake } from "lucide-react";
 import { useState } from "react";
-import { Category, FLAVORS, formatBRL, calcUnitPrice } from "@/data/menu";
+import { Category, formatBRL, calcUnitPrice } from "@/data/menu";
 import { SpotlightCard } from "@/components/SpotlightCard";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
+import { useMenu } from "@/context/MenuContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ProductionConfig } from "@/pages/Admin";
@@ -23,7 +24,8 @@ interface Props {
 
 export function CategoryCard({ category, productionConfig }: Props) {
   const Icon = ICONS[category.slug] ?? Cookie;
-  const { add, items } = useCart();
+  const { add } = useCart();
+  const { flavors } = useMenu();
   const [selectedSize, setSelectedSize] = useState<string>(
     category.pricing === "per_kg" ? category.sizes![0].label : category.size!,
   );
@@ -34,7 +36,7 @@ export function CategoryCard({ category, productionConfig }: Props) {
       ? category.sizes!.find((s) => s.label === selectedSize)?.grams
       : undefined;
 
-  const handleAdd = (flavorKey: typeof FLAVORS[number]["key"], flavorName: string, premium: boolean) => {
+  const handleAdd = (flavorKey: string, flavorName: string, premium: boolean) => {
     add({
       category,
       flavor: flavorKey,
@@ -93,7 +95,7 @@ export function CategoryCard({ category, productionConfig }: Props) {
 
       {/* Cookie flavor list */}
       <ul className="space-y-2">
-        {[...FLAVORS.filter((f) => {
+        {[...flavors.filter((f) => {
           const price = category.prices[f.key];
           return price !== undefined && price > 0;
         }).map((f) => ({

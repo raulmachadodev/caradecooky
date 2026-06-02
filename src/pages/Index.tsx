@@ -1,4 +1,3 @@
-import { CATEGORIES } from "@/data/menu";
 import { CategoryCard } from "@/components/CategoryCard";
 import { BrownieCard } from "@/components/BrownieCard";
 import { FeaturesStrip } from "@/components/FeaturesStrip";
@@ -10,11 +9,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Instagram, MessageCircle, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useMenu } from "@/context/MenuContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductionConfig } from "@/pages/Admin";
 
 const Index = () => {
   const { count } = useCart();
+  const { categories } = useMenu();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, loading } = useAuth();
@@ -118,11 +119,10 @@ const Index = () => {
           </header>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-            {/* Coluna 1 combinada: Bola Cookie + Brownie */}
             {(!productionConfig.disabled_categories.includes("bola-cookie") || 
               !productionConfig.disabled_categories.includes("brownie")) && (
               <div className="flex flex-col gap-6">
-                {CATEGORIES.filter(
+                {categories.filter(
                   (cat) => cat.slug === "bola-cookie" && !productionConfig.disabled_categories.includes(cat.slug)
                 ).map((cat) => (
                   <CategoryCard key={cat.slug} category={cat} productionConfig={productionConfig} />
@@ -134,7 +134,7 @@ const Index = () => {
             )}
 
             {/* Restante das categorias (Marmitas) */}
-            {CATEGORIES.filter(
+            {categories.filter(
               (cat) =>
                 cat.slug !== "bola-cookie" &&
                 cat.slug !== "torta-cookie" &&
@@ -144,7 +144,7 @@ const Index = () => {
             ))}
 
             {/* Torta Cookie por último */}
-            {CATEGORIES.filter(
+            {categories.filter(
               (cat) => cat.slug === "torta-cookie" && !productionConfig.disabled_categories.includes(cat.slug)
             ).map((cat) => (
               <CategoryCard key={cat.slug} category={cat} productionConfig={productionConfig} />

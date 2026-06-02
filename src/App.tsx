@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
+import { MenuProvider } from "@/context/MenuContext";
 import Index from "./pages/Index.tsx";
 import Checkout from "./pages/Checkout.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
@@ -21,16 +22,18 @@ const App = () => (
       <Analytics />
       <SpeedInsights />
       <CartProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/track" element={<TrackOrder />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <MenuProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/track" element={<TrackOrder />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </MenuProvider>
       </CartProvider>
     </TooltipProvider>
   </QueryClientProvider>

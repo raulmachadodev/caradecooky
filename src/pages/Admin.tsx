@@ -1,9 +1,10 @@
 import { useEffect, useState, memo } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { LogOut, Cookie, RefreshCw, Calendar, Clock, Inbox, ChevronRight, Truck, Settings, X, Plus, Trash2, Bell, BellOff } from "lucide-react";
+import { LogOut, Cookie, RefreshCw, Calendar, Clock, Inbox, ChevronRight, Truck, Settings, X, Plus, Trash2, Bell, BellOff, Pencil } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useMenu } from "@/context/MenuContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -352,6 +353,7 @@ function PushButton() {
 
 const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
+  const { flavors: menuFlavors, menuConfig, updateMenuConfig } = useMenu();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState<"todos" | "hoje" | "ontem" | "agendados">("todos");
@@ -369,7 +371,17 @@ const Admin = () => {
   });
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [newBlockedDate, setNewBlockedDate] = useState("");
-  const [activeTab, setActiveTab] = useState<"entregas" | "producao">("producao");
+  const [activeTab, setActiveTab] = useState<"entregas" | "producao" | "sabores">("producao");
+  const [flavorModalOpen, setFlavorModalOpen] = useState(false);
+  const [editingFlavor, setEditingFlavor] = useState<{
+    key: string;
+    isNew: boolean;
+    name: string;
+    description: string;
+    badge: string;
+    premium: boolean;
+    prices: Record<string, string>;
+  } | null>(null);
 
   async function loadConfig() {
     const { data: deliveryData } = await supabase
@@ -409,6 +421,83 @@ const Admin = () => {
     } else {
       toast.success("Configurações salvas!");
     }
+  }
+
+  async function saveFlavorEdit() {
+    if (!editingFlavor || !editingFlavor.name.trim()) {
+      toast.error("O nome do sabor é obrigatório.");
+      return;
+    }
+
+    const key = editingFlavor.isNew
+      ? editingFlavor.name
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, "_")
+          .replace(/[^a-z0-9_]/g, "")
+      : editingFlavor.key;
+
+    const newFlavors: Record<string, any> = {
+      ...(menuConfig.flavors || {}),
+      [key]: {
+        key,
+        name: editingFlavor.name.trim(),
+        ...(editingFlavor.description.trim() ? { description: editingFlavor.description.trim() } : {}),
+        ...(editingFlavor.badge.trim() ? { badge: editingFlavor.badge.trim() } : {}),
+        ...(editingFlavor.premium ? { premium: true } : {}),
+      },
+    };
+
+    const newCategoryPrices: Record<string, Record<string, number>> = {
+      ...(menuConfig.categoryPrices || {}),
+    };
+    for (const cat of CATEGORIES) {
+      const priceStr = editingFlavor.prices[cat.slug] || "";
+      const price = parseFloat(priceStr.replace(",", "."));
+      newCategoryPrices[cat.slug] = {
+        ...(newCategoryPrices[cat.slug] || {}),
+        [key]: isNaN(price) ? 0 : price,
+      };
+    }
+
+    await updateMenuConfig({ flavors: newFlavors, categoryPrices: newCategoryPrices });
+    setFlavorModalOpen(false);
+    setEditingFlavor(null);
+    toast.success(editingFlavor.isNew ? "Sabor criado com sucesso! 🍪" : "Sabor atualizado!");
+  }
+
+  function openNewFlavor() {
+    setEditingFlavor({
+      key: "",
+      isNew: true,
+      name: "",
+      description: "",
+      badge: "",
+      premium: false,
+      prices: Object.fromEntries(CATEGORIES.map((c) => [c.slug, ""])),
+    });
+    setFlavorModalOpen(true);
+  }
+
+  function openEditFlavor(flavor: any) {
+    setEditingFlavor({
+      key: flavor.key,
+      isNew: false,
+      name: flavor.name,
+      description: flavor.description || "",
+      badge: flavor.badge || "",
+      premium: !!flavor.premium,
+      prices: Object.fromEntries(
+        CATEGORIES.map((c) => {
+          const overridePrice = (menuConfig.categoryPrices?.[c.slug] as any)?.[flavor.key];
+          const basePrice = (c.prices as any)[flavor.key];
+          const price = overridePrice ?? basePrice ?? 0;
+          return [c.slug, price > 0 ? String(price) : ""];
+        })
+      ),
+    });
+    setFlavorModalOpen(true);
   }
 
   async function load() {
@@ -610,21 +699,27 @@ const Admin = () => {
                   <span className="hidden sm:inline">Configurar Produção</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-xl bg-white max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Configurar Loja e Produção</DialogTitle>
                   <DialogDescription>Gerencie o estoque e as datas de entrega.</DialogDescription>
                 </DialogHeader>
 
-                <div className="flex gap-2 border-b border-border/50 pb-2">
-                  <button 
-                    onClick={() => setActiveTab("producao")} 
+                <div className="flex gap-2 border-b border-border/50 pb-2 flex-wrap">
+                  <button
+                    onClick={() => setActiveTab("producao")}
                     className={cn("px-4 py-2 text-sm font-bold rounded-t-xl transition-all", activeTab === "producao" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
                   >
                     Estoque & Produtos
                   </button>
-                  <button 
-                    onClick={() => setActiveTab("entregas")} 
+                  <button
+                    onClick={() => setActiveTab("sabores")}
+                    className={cn("px-4 py-2 text-sm font-bold rounded-t-xl transition-all", activeTab === "sabores" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
+                  >
+                    Sabores & Preços
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("entregas")}
                     className={cn("px-4 py-2 text-sm font-bold rounded-t-xl transition-all", activeTab === "entregas" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
                   >
                     Dias de Entrega
@@ -671,6 +766,43 @@ const Admin = () => {
                             </Badge>
                           ))}
                         </div>
+                      </div>
+                    </div>
+                  ) : activeTab === "sabores" ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="font-bold text-primary uppercase tracking-widest text-[10px]">Sabores do Cardápio</Label>
+                        <Button size="sm" className="h-8 gap-1 text-xs" onClick={openNewFlavor}>
+                          <Plus className="h-3.5 w-3.5" /> Novo Sabor
+                        </Button>
+                      </div>
+                      <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                        {menuFlavors.map((flavor) => (
+                          <div key={flavor.key} className="flex items-start justify-between rounded-xl border border-border/50 p-3 bg-card/50 gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-sm text-foreground">{flavor.name}</span>
+                                {flavor.premium && (
+                                  <span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Premium</span>
+                                )}
+                                {flavor.badge && (
+                                  <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">{flavor.badge}</span>
+                                )}
+                              </div>
+                              {flavor.description && (
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{flavor.description}</p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"
+                              onClick={() => openEditFlavor(flavor)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ) : (
@@ -855,6 +987,83 @@ const Admin = () => {
           </div>
         )}
       </main>
+
+      {/* Modal de edição/criação de sabor */}
+      <Dialog open={flavorModalOpen} onOpenChange={(open) => { if (!open) { setFlavorModalOpen(false); setEditingFlavor(null); } }}>
+        <DialogContent className="max-w-lg bg-white max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingFlavor?.isNew ? "Novo Sabor" : "Editar Sabor"}</DialogTitle>
+            <DialogDescription>Configure nome, descrição e preços por categoria.</DialogDescription>
+          </DialogHeader>
+          {editingFlavor && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Nome do Sabor</Label>
+                  <Input
+                    value={editingFlavor.name}
+                    onChange={(e) => setEditingFlavor((prev) => prev ? { ...prev, name: e.target.value } : null)}
+                    placeholder="Ex: Brigadeiro"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Descrição (exibida no cardápio)</Label>
+                  <Input
+                    value={editingFlavor.description}
+                    onChange={(e) => setEditingFlavor((prev) => prev ? { ...prev, description: e.target.value } : null)}
+                    placeholder="Ex: Massa crocante com recheio cremoso..."
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Etiqueta Promocional</Label>
+                  <Input
+                    value={editingFlavor.badge}
+                    onChange={(e) => setEditingFlavor((prev) => prev ? { ...prev, badge: e.target.value } : null)}
+                    placeholder="Ex: Novo! ou Promoção de lançamento"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-6">
+                  <Checkbox
+                    id="flavor-premium"
+                    checked={editingFlavor.premium}
+                    onCheckedChange={(checked) => setEditingFlavor((prev) => prev ? { ...prev, premium: !!checked } : null)}
+                  />
+                  <Label htmlFor="flavor-premium" className="text-sm font-bold cursor-pointer">Premium</Label>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <Label className="text-xs font-bold text-primary uppercase tracking-widest mb-1 block">Preços por Categoria (R$)</Label>
+                <p className="text-[10px] text-muted-foreground mb-3">Deixe em branco para não vender nessa categoria.</p>
+                <div className="space-y-2">
+                  {CATEGORIES.map((cat) => (
+                    <div key={cat.slug} className="flex items-center gap-3">
+                      <Label className="text-xs font-medium w-36 shrink-0 text-muted-foreground">{cat.name}</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="h-8 text-sm"
+                        value={editingFlavor.prices[cat.slug] || ""}
+                        onChange={(e) => setEditingFlavor((prev) => prev ? {
+                          ...prev,
+                          prices: { ...prev.prices, [cat.slug]: e.target.value },
+                        } : null)}
+                        placeholder="0,00"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="border-t pt-4">
+            <Button variant="outline" onClick={() => { setFlavorModalOpen(false); setEditingFlavor(null); }}>Cancelar</Button>
+            <Button className="bg-gradient-chocolate shadow-glow font-bold" onClick={saveFlavorEdit}>
+              {editingFlavor?.isNew ? "Criar Sabor" : "Salvar Alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

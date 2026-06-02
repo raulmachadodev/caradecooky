@@ -41,7 +41,7 @@ export const FLAVORS: Flavor[] = [
   { key: "cappuccino", name: "Dark Cappuccino", description: "Massa dark crocante por fora e macia por dentro, com cacau 100%." },
   { key: "kinder", name: "Kinder", premium: true, description: "Massa tradicional crocante por fora e macia por dentro, com gotas de chocolate nobre meio amargo, decorado com granulados e Kinder por cima." },
   { key: "buenotella", name: "Buenotella", premium: true, description: "Massa crocante por fora e macia por dentro." },
-  { key: "mini_bola", name: "Mini", badge: "Valor promocional de lançamento", description: "Massa crocante por fora e macia por dentro." },
+  { key: "mini_bola", name: "Mini (5 unidades)", badge: "Valor promocional de lançamento", description: "Massa crocante por fora e macia por dentro." },
 ];
 
 export const CATEGORIES: Category[] = [
