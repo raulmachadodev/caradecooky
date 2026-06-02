@@ -293,10 +293,10 @@ const Checkout = () => {
                 <Input id="delivery_date" name="delivery_date" type="date" required min={today} value={selectedDate} onChange={handleDateChange} className="h-12 rounded-xl border-secondary/30" />
                 <div className="rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3">
                   <p className="text-sm text-amber-900 font-semibold leading-relaxed">
-                    Todas as entregas s&atilde;o realizadas <strong className="text-amber-950">somente no per&iacute;odo da noite, a partir das 18h</strong>.
+                    Nossas entregas do dia s&atilde;o realizadas <strong className="text-amber-950">a partir das 18h</strong>.
                   </p>
                   <p className="text-xs text-amber-700 mt-1">
-                    N&atilde;o realizamos entregas pela manh&atilde; ou &agrave; tarde.
+                    Caso precise receber mais cedo, pedimos que fa&ccedil;a sua encomenda com um dia de anteced&ecirc;ncia para prepararmos tudo com carinho. &hearts;
                   </p>
                 </div>
               </div>
