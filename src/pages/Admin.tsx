@@ -467,6 +467,23 @@ const Admin = () => {
     toast.success(editingFlavor.isNew ? "Sabor criado com sucesso! 🍪" : "Sabor atualizado!");
   }
 
+  async function removeFlavorFromCategory(flavorKey: string, categorySlug: string) {
+    const newCategoryPrices: Record<string, Record<string, number>> = {
+      ...(menuConfig.categoryPrices || {}),
+    };
+
+    newCategoryPrices[categorySlug] = {
+      ...(newCategoryPrices[categorySlug] || {}),
+      [flavorKey]: 0,
+    };
+
+    await updateMenuConfig({
+      flavors: menuConfig.flavors || {},
+      categoryPrices: newCategoryPrices,
+    });
+    toast.success("Sabor removido com sucesso!");
+  }
+
   function openNewFlavor() {
     setEditingFlavor({
       key: "",
@@ -879,16 +896,48 @@ const Admin = () => {
                                 }).map(f => {
                                   const flavorKey = `${cat.slug}|${f.key}`;
                                   return (
-                                    <div key={flavorKey} className="flex items-center space-x-2 rounded-md bg-muted/30 p-1.5">
-                                      <Checkbox 
-                                        id={`flavor-${flavorKey}`} 
-                                        checked={!productionConfig.disabled_flavors.includes(flavorKey)}
-                                        onCheckedChange={(checked) => {
-                                          if (checked) setProductionConfig(prev => ({ ...prev, disabled_flavors: prev.disabled_flavors.filter(k => k !== flavorKey) }));
-                                          else setProductionConfig(prev => ({ ...prev, disabled_flavors: [...prev.disabled_flavors, flavorKey] }));
-                                        }}
-                                      />
-                                      <Label htmlFor={`flavor-${flavorKey}`} className="text-xs font-medium cursor-pointer flex-1 truncate">{f.name}</Label>
+                                    <div key={flavorKey} className="flex items-center justify-between rounded-md bg-muted/30 p-1.5 gap-2">
+                                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                        <Checkbox 
+                                          id={`flavor-${flavorKey}`} 
+                                          checked={!productionConfig.disabled_flavors.includes(flavorKey)}
+                                          onCheckedChange={(checked) => {
+                                            if (checked) setProductionConfig(prev => ({ ...prev, disabled_flavors: prev.disabled_flavors.filter(k => k !== flavorKey) }));
+                                            else setProductionConfig(prev => ({ ...prev, disabled_flavors: [...prev.disabled_flavors, flavorKey] }));
+                                          }}
+                                        />
+                                        <Label htmlFor={`flavor-${flavorKey}`} className="text-xs font-medium cursor-pointer truncate flex-1">{f.name}</Label>
+                                      </div>
+                                      
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                            title={`Remover ${f.name} de ${cat.name}`}
+                                          >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent className="bg-white">
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>Remover sabor da caixinha?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              Esta ação removerá o sabor <strong>{f.name}</strong> da categoria <strong>{cat.name}</strong>. Para adicioná-lo de volta, você precisará definir um preço para ele em "Sabores & Preços".
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                            <AlertDialogAction 
+                                              onClick={() => removeFlavorFromCategory(f.key, cat.slug)}
+                                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            >
+                                              Remover
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
                                     </div>
                                   );
                                 })}
