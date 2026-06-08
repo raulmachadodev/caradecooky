@@ -353,7 +353,7 @@ function PushButton() {
 
 const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
-  const { flavors: menuFlavors, menuConfig, updateMenuConfig } = useMenu();
+  const { flavors: menuFlavors, categories: menuCategories, menuConfig, updateMenuConfig } = useMenu();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState<"todos" | "hoje" | "ontem" | "agendados">("todos");
@@ -825,7 +825,7 @@ const Admin = () => {
                         </div>
                       </div>
 
-                      {CATEGORIES.map(cat => (
+                      {menuCategories.map(cat => (
                         <div key={cat.slug} className="rounded-xl border p-4 bg-card/50">
                           <div className="flex items-center justify-between mb-3 border-b border-border/50 pb-2">
                             <Label className="font-bold text-primary uppercase tracking-widest text-[10px]">{cat.name}</Label>
@@ -873,8 +873,8 @@ const Admin = () => {
                             <div>
                               <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Sabores</Label>
                               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                {FLAVORS.filter(f => {
-                                  const price = cat.prices[f.key];
+                                {menuFlavors.filter(f => {
+                                  const price = (cat.prices as any)[f.key];
                                   return price !== undefined && price > 0;
                                 }).map(f => {
                                   const flavorKey = `${cat.slug}|${f.key}`;
