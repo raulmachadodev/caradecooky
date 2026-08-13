@@ -86,6 +86,54 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          id: string
+          key: string
+          value: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          value: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          id: string
+          endpoint: string
+          auth: string
+          p256dh: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          endpoint: string
+          auth: string
+          p256dh: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          endpoint?: string
+          auth?: string
+          p256dh?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

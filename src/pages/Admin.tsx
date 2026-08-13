@@ -1,6 +1,6 @@
 import { useEffect, useState, memo } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { LogOut, Cookie, RefreshCw, Calendar, Clock, Inbox, ChevronRight, Truck, Settings, X, Plus, Trash2, Bell, BellOff, Pencil } from "lucide-react";
+import { LogOut, Cookie, RefreshCw, Calendar, Clock, Inbox, ChevronRight, Truck, Settings, X, Plus, Trash2, Bell, BellOff, Pencil, Gift, FolderPlus } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,7 +40,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatBRL, CATEGORIES, FLAVORS } from "@/data/menu";
+import { formatBRL, CATEGORIES, FLAVORS, ToppingProduct, CustomCategory, ToppingOption } from "@/data/menu";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -353,7 +353,7 @@ function PushButton() {
 
 const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
-  const { flavors: menuFlavors, categories: menuCategories, menuConfig, updateMenuConfig } = useMenu();
+  const { flavors: menuFlavors, categories: menuCategories, toppingProducts, menuConfig, updateMenuConfig } = useMenu();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState<"todos" | "hoje" | "ontem" | "agendados">("todos");
@@ -371,7 +371,7 @@ const Admin = () => {
   });
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [newBlockedDate, setNewBlockedDate] = useState("");
-  const [activeTab, setActiveTab] = useState<"entregas" | "producao" | "sabores">("producao");
+  const [activeTab, setActiveTab] = useState<"entregas" | "producao" | "sabores" | "categorias">("producao");
   const [flavorModalOpen, setFlavorModalOpen] = useState(false);
   const [editingFlavor, setEditingFlavor] = useState<{
     key: string;
@@ -381,6 +381,34 @@ const Admin = () => {
     badge: string;
     premium: boolean;
     prices: Record<string, string>;
+  } | null>(null);
+
+  // --- Category management state ---
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<{
+    isNew: boolean;
+    slug: string;
+    name: string;
+    tagline: string;
+    pricing: "fixed" | "per_kg";
+    size: string;
+  } | null>(null);
+
+  // --- Topping product management state ---
+  const [toppingModalOpen, setToppingModalOpen] = useState(false);
+  const [editingTopping, setEditingTopping] = useState<{
+    isNew: boolean;
+    id: string;
+    name: string;
+    badge: string;
+    description: string;
+    categorySlug: string;
+    basePrice: string;
+    extraToppingPrice: string;
+    extraToppingDiscount: string;
+    toppings: ToppingOption[];
+    enabled: boolean;
+    newToppingName: string;
   } | null>(null);
 
   async function loadConfig() {
@@ -409,11 +437,11 @@ const Admin = () => {
     setIsSavingConfig(true);
     const { error: e1 } = await supabase
       .from("site_settings")
-      .upsert({ id: "delivery_config", value: deliveryConfig as any });
+      .upsert({ id: "delivery_config", key: "delivery_config", value: deliveryConfig as any });
     
     const { error: e2 } = await supabase
       .from("site_settings")
-      .upsert({ id: "production_config", value: productionConfig as any });
+      .upsert({ id: "production_config", key: "production_config", value: productionConfig as any });
     
     setIsSavingConfig(false);
     if (e1 || e2) {
@@ -515,6 +543,109 @@ const Admin = () => {
       ),
     });
     setFlavorModalOpen(true);
+  }
+
+  // --- Category Management ---
+  async function saveCategoryEdit() {
+    if (!editingCategory || !editingCategory.name.trim()) {
+      toast.error("O nome da categoria é obrigatório.");
+      return;
+    }
+    const slug = editingCategory.isNew
+      ? editingCategory.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+      : editingCategory.slug;
+
+    const newCategory: CustomCategory = {
+      slug,
+      name: editingCategory.name.trim(),
+      tagline: editingCategory.tagline.trim(),
+      pricing: editingCategory.pricing,
+      size: editingCategory.size.trim() || undefined,
+    };
+
+    const currentCategories = menuConfig.customCategories || [];
+    const newCategories = editingCategory.isNew
+      ? [...currentCategories, newCategory]
+      : currentCategories.map(c => c.slug === slug ? newCategory : c);
+
+    await updateMenuConfig({ ...menuConfig, customCategories: newCategories });
+    setCategoryModalOpen(false);
+    setEditingCategory(null);
+    toast.success(editingCategory.isNew ? "Categoria criada!" : "Categoria atualizada!");
+  }
+
+  async function deleteCategory(slug: string) {
+    const newCategories = (menuConfig.customCategories || []).filter(c => c.slug !== slug);
+    await updateMenuConfig({ ...menuConfig, customCategories: newCategories });
+    toast.success("Categoria removida!");
+  }
+
+  function openNewCategory() {
+    setEditingCategory({ isNew: true, slug: "", name: "", tagline: "", pricing: "fixed", size: "" });
+    setCategoryModalOpen(true);
+  }
+
+  function openEditCategory(cat: CustomCategory) {
+    setEditingCategory({ isNew: false, slug: cat.slug, name: cat.name, tagline: cat.tagline, pricing: cat.pricing, size: cat.size || "" });
+    setCategoryModalOpen(true);
+  }
+
+  // --- Topping Product Management ---
+  async function saveToppingEdit() {
+    if (!editingTopping || !editingTopping.name.trim() || !editingTopping.categorySlug) {
+      toast.error("Nome e categoria são obrigatórios.");
+      return;
+    }
+    const id = editingTopping.isNew ? `kit_${Date.now()}` : editingTopping.id;
+    const basePrice = parseFloat(editingTopping.basePrice.replace(",", ".")) || 0;
+    const extraPrice = parseFloat(editingTopping.extraToppingPrice.replace(",", ".")) || 0;
+    const extraDiscount = parseFloat(editingTopping.extraToppingDiscount.replace(",", ".")) || 0;
+
+    const newProduct: ToppingProduct = {
+      id,
+      name: editingTopping.name.trim(),
+      badge: editingTopping.badge.trim(),
+      description: editingTopping.description.trim(),
+      categorySlug: editingTopping.categorySlug,
+      basePrice,
+      extraToppingPrice: extraPrice,
+      extraToppingDiscount: extraDiscount,
+      toppings: editingTopping.toppings,
+      enabled: editingTopping.enabled,
+    };
+
+    const currentProducts = menuConfig.toppingProducts || [];
+    const newProducts = editingTopping.isNew
+      ? [...currentProducts, newProduct]
+      : currentProducts.map(p => p.id === id ? newProduct : p);
+
+    await updateMenuConfig({ ...menuConfig, toppingProducts: newProducts });
+    setToppingModalOpen(false);
+    setEditingTopping(null);
+    toast.success(editingTopping.isNew ? "Produto com topping criado!" : "Produto atualizado!");
+  }
+
+  async function deleteTopping(id: string) {
+    const newProducts = (menuConfig.toppingProducts || []).filter(p => p.id !== id);
+    await updateMenuConfig({ ...menuConfig, toppingProducts: newProducts });
+    toast.success("Produto removido!");
+  }
+
+  function openNewTopping() {
+    setEditingTopping({
+      isNew: true, id: "", name: "", badge: "", description: "", categorySlug: "bola-cookie",
+      basePrice: "", extraToppingPrice: "", extraToppingDiscount: "", toppings: [], enabled: true, newToppingName: ""
+    });
+    setToppingModalOpen(true);
+  }
+
+  function openEditTopping(p: ToppingProduct) {
+    setEditingTopping({
+      isNew: false, id: p.id, name: p.name, badge: p.badge || "", description: p.description || "", categorySlug: p.categorySlug,
+      basePrice: String(p.basePrice), extraToppingPrice: String(p.extraToppingPrice), extraToppingDiscount: String(p.extraToppingDiscount),
+      toppings: p.toppings, enabled: p.enabled, newToppingName: ""
+    });
+    setToppingModalOpen(true);
   }
 
   async function load() {
@@ -741,6 +872,12 @@ const Admin = () => {
                   >
                     Dias de Entrega
                   </button>
+                  <button
+                    onClick={() => setActiveTab("categorias")}
+                    className={cn("px-4 py-2 text-sm font-bold rounded-t-xl transition-all", activeTab === "categorias" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
+                  >
+                    Categorias & Kits
+                  </button>
                 </div>
 
                 <div className="py-4">
@@ -820,6 +957,104 @@ const Admin = () => {
                             </Button>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  ) : activeTab === "categorias" ? (
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-bold text-primary uppercase tracking-widest text-[10px]">Categorias Customizadas</Label>
+                          <Button size="sm" className="h-8 gap-1 text-xs" onClick={openNewCategory}>
+                            <FolderPlus className="h-3.5 w-3.5" /> Nova Categoria
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {(menuConfig.customCategories || []).length === 0 ? (
+                            <p className="text-xs text-muted-foreground italic bg-muted/30 p-3 rounded-lg text-center">Nenhuma categoria criada. Clique em "Nova Categoria" para começar.</p>
+                          ) : (
+                            (menuConfig.customCategories || []).map((cat) => (
+                              <div key={cat.slug} className="flex items-start justify-between rounded-xl border border-border/50 p-3 bg-card/50 gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-bold text-sm text-foreground">{cat.name}</span>
+                                    <span className="text-[9px] bg-secondary/20 text-secondary-foreground px-2 py-0.5 rounded-full font-bold uppercase">{cat.pricing === 'fixed' ? 'Preço Fixo' : 'Por Kg'}</span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-1 truncate">{cat.tagline}</p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openEditCategory(cat)}>
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="bg-white">
+                                      <AlertDialogHeader><AlertDialogTitle>Excluir categoria?</AlertDialogTitle></AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => deleteCategory(cat.slug)} className="bg-destructive text-destructive-foreground">Excluir</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t border-border/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="font-bold text-primary uppercase tracking-widest text-[10px] flex items-center gap-1.5"><Gift className="h-3.5 w-3.5" /> Produtos Tipo Kit / Adicionais</Label>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Ex: Kit 7 Mini-Cookies + Topping</p>
+                          </div>
+                          <Button size="sm" className="h-8 gap-1 text-xs bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-0" onClick={openNewTopping}>
+                            <Plus className="h-3.5 w-3.5" /> Novo Kit
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {(menuConfig.toppingProducts || []).length === 0 ? (
+                            <p className="text-xs text-muted-foreground italic bg-muted/30 p-3 rounded-lg text-center">Nenhum produto tipo kit cadastrado.</p>
+                          ) : (
+                            (menuConfig.toppingProducts || []).map((prod) => (
+                              <div key={prod.id} className={cn("flex flex-col rounded-xl border border-border/50 p-3 gap-3 transition-colors", prod.enabled ? "bg-card/50" : "bg-muted/30 opacity-70")}>
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-bold text-sm text-foreground">{prod.name}</span>
+                                      {!prod.enabled && <span className="text-[9px] bg-muted-foreground/20 text-muted-foreground px-2 py-0.5 rounded-full font-bold uppercase">Inativo</span>}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-1">Base: {formatBRL(prod.basePrice)} • Categoria: {menuCategories.find(c => c.slug === prod.categorySlug)?.name || prod.categorySlug}</p>
+                                    <p className="text-[10px] text-muted-foreground">Toppings: {prod.toppings.filter(t => t.available).length} ativos</p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openEditTopping(prod)}>
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent className="bg-white">
+                                        <AlertDialogHeader><AlertDialogTitle>Excluir produto?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => deleteTopping(prod.id)} className="bg-destructive text-destructive-foreground">Excluir</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -1110,6 +1345,179 @@ const Admin = () => {
             <Button className="bg-gradient-chocolate shadow-glow font-bold" onClick={saveFlavorEdit}>
               {editingFlavor?.isNew ? "Criar Sabor" : "Salvar Alterações"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Modal de edição/criação de categoria */}
+      <Dialog open={categoryModalOpen} onOpenChange={(open) => { if (!open) { setCategoryModalOpen(false); setEditingCategory(null); } }}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>{editingCategory?.isNew ? "Nova Categoria" : "Editar Categoria"}</DialogTitle>
+            <DialogDescription>Configure as informações básicas desta categoria. Sabores poderão ser adicionados na aba "Sabores & Preços".</DialogDescription>
+          </DialogHeader>
+          {editingCategory && (
+            <div className="space-y-4 py-2">
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Nome da Categoria</Label>
+                <Input value={editingCategory.name} onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })} placeholder="Ex: Bola Cookie Especial" />
+              </div>
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Subtítulo (Tagline)</Label>
+                <Input value={editingCategory.tagline} onChange={(e) => setEditingCategory({ ...editingCategory, tagline: e.target.value })} placeholder="Ex: O clássico repaginado." />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Tipo de Preço</Label>
+                  <Select value={editingCategory.pricing} onValueChange={(v: "fixed" | "per_kg") => setEditingCategory({ ...editingCategory, pricing: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Preço Fixo</SelectItem>
+                      {/* <SelectItem value="per_kg">Por Quilo (Em breve)</SelectItem> */}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Tamanho (Ex: 100g, Pequena)</Label>
+                  <Input value={editingCategory.size} onChange={(e) => setEditingCategory({ ...editingCategory, size: e.target.value })} placeholder="100g" />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setCategoryModalOpen(false); setEditingCategory(null); }}>Cancelar</Button>
+            <Button className="bg-gradient-chocolate shadow-glow font-bold" onClick={saveCategoryEdit}>{editingCategory?.isNew ? "Criar" : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de edição/criação de Topping Product */}
+      <Dialog open={toppingModalOpen} onOpenChange={(open) => { if (!open) { setToppingModalOpen(false); setEditingTopping(null); } }}>
+        <DialogContent className="max-w-lg bg-white max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingTopping?.isNew ? "Novo Produto com Toppings" : "Editar Produto"}</DialogTitle>
+            <DialogDescription>Configure kits como o "7 Mini-Cookies + Topping" e sua regra de adicionais.</DialogDescription>
+          </DialogHeader>
+          {editingTopping && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Nome do Produto</Label>
+                  <Input value={editingTopping.name} onChange={(e) => setEditingTopping({ ...editingTopping, name: e.target.value })} placeholder="Ex: Kit 7 Mini-Cookies + Topping" />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Descrição Curta</Label>
+                  <Input value={editingTopping.description} onChange={(e) => setEditingTopping({ ...editingTopping, description: e.target.value })} placeholder="Ex: Escolha seu topping favorito..." />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Etiqueta Promocional</Label>
+                  <Input value={editingTopping.badge} onChange={(e) => setEditingTopping({ ...editingTopping, badge: e.target.value })} placeholder="Ex: Novidade!" />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold uppercase tracking-wider mb-1.5 block">Exibir na Categoria</Label>
+                  <Select value={editingTopping.categorySlug} onValueChange={(v) => setEditingTopping({ ...editingTopping, categorySlug: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {menuCategories.map(c => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 grid grid-cols-3 gap-3">
+                <div className="col-span-3">
+                  <Label className="text-xs font-bold text-primary uppercase tracking-widest mb-1 block">Precificação (R$)</Label>
+                </div>
+                <div>
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5 block">Preço Base (com 1 topping)</Label>
+                  <Input type="number" step="0.01" value={editingTopping.basePrice} onChange={(e) => setEditingTopping({ ...editingTopping, basePrice: e.target.value })} placeholder="30,00" />
+                </div>
+                <div>
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5 block">Valor Adicional (+ Topping)</Label>
+                  <Input type="number" step="0.01" value={editingTopping.extraToppingPrice} onChange={(e) => setEditingTopping({ ...editingTopping, extraToppingPrice: e.target.value })} placeholder="7,00" />
+                </div>
+                <div>
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5 block">Desconto a partir do 2º Adic.</Label>
+                  <Input type="number" step="0.01" value={editingTopping.extraToppingDiscount} onChange={(e) => setEditingTopping({ ...editingTopping, extraToppingDiscount: e.target.value })} placeholder="2,00" />
+                  <p className="text-[9px] text-muted-foreground mt-1 leading-tight">Ex: +7 no 1º extra, +5 nos próximos (7-2=5)</p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <Label className="text-xs font-bold text-primary uppercase tracking-widest mb-3 block">Sabores de Topping</Label>
+                
+                <div className="flex gap-2 mb-4">
+                  <Input 
+                    placeholder="Nome do sabor (Ex: Nutella)" 
+                    value={editingTopping.newToppingName}
+                    onChange={(e) => setEditingTopping({ ...editingTopping, newToppingName: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (editingTopping.newToppingName.trim()) {
+                          const key = editingTopping.newToppingName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+                          setEditingTopping({
+                            ...editingTopping,
+                            toppings: [...editingTopping.toppings, { key, name: editingTopping.newToppingName.trim(), available: true }],
+                            newToppingName: ""
+                          });
+                        }
+                      }
+                    }}
+                  />
+                  <Button type="button" size="sm" onClick={() => {
+                    if (editingTopping.newToppingName.trim()) {
+                      const key = editingTopping.newToppingName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+                      setEditingTopping({
+                        ...editingTopping,
+                        toppings: [...editingTopping.toppings, { key, name: editingTopping.newToppingName.trim(), available: true }],
+                        newToppingName: ""
+                      });
+                    }
+                  }}>Adicionar</Button>
+                </div>
+
+                <div className="space-y-2">
+                  {editingTopping.toppings.map((t, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-muted/30 p-2 rounded-lg border border-border/50">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Checkbox 
+                          checked={t.available}
+                          onCheckedChange={(c) => {
+                            const newToppings = [...editingTopping.toppings];
+                            newToppings[idx].available = !!c;
+                            setEditingTopping({ ...editingTopping, toppings: newToppings });
+                          }}
+                        />
+                        <span className={cn("text-sm font-medium", !t.available && "text-muted-foreground line-through")}>{t.name}</span>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" onClick={() => {
+                        setEditingTopping({ ...editingTopping, toppings: editingTopping.toppings.filter((_, i) => i !== idx) });
+                      }}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                  {editingTopping.toppings.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center italic py-2">Nenhum topping cadastrado.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    id="topping-enabled"
+                    checked={editingTopping.enabled}
+                    onCheckedChange={(c) => setEditingTopping({ ...editingTopping, enabled: !!c })}
+                  />
+                  <Label htmlFor="topping-enabled" className="text-sm font-bold cursor-pointer">Ativar produto na loja</Label>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="border-t pt-4 mt-2">
+            <Button variant="outline" onClick={() => { setToppingModalOpen(false); setEditingTopping(null); }}>Cancelar</Button>
+            <Button className="bg-gradient-chocolate shadow-glow font-bold" onClick={saveToppingEdit}>{editingTopping?.isNew ? "Criar Produto" : "Salvar Alterações"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

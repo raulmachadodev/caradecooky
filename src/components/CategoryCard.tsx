@@ -1,6 +1,6 @@
-import { Plus, Cookie, Package, Cake } from "lucide-react";
+import { Plus, Cookie, Package, Cake, Gift, ChevronDown, X } from "lucide-react";
 import { useState } from "react";
-import { Category, formatBRL, calcUnitPrice } from "@/data/menu";
+import { Category, formatBRL, calcUnitPrice, calcToppingProductPrice, ToppingProduct } from "@/data/menu";
 import { SpotlightCard } from "@/components/SpotlightCard";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
@@ -22,10 +22,206 @@ interface Props {
   productionConfig?: ProductionConfig;
 }
 
+/** Sub-component for Kit Topping Product */
+function KitToppingCard({ product, category }: { product: ToppingProduct; category: Category }) {
+  const { addKit } = useCart();
+  const [mainTopping, setMainTopping] = useState<string>(
+    product.toppings.find(t => t.available)?.key || ""
+  );
+  const [extraToppings, setExtraToppings] = useState<string[]>([]);
+  const [showExtraSelector, setShowExtraSelector] = useState(false);
+
+  const availableToppings = product.toppings.filter(t => t.available);
+  const mainToppingObj = availableToppings.find(t => t.key === mainTopping);
+  
+  const extraToppingObjs = extraToppings
+    .map(key => availableToppings.find(t => t.key === key))
+    .filter(Boolean) as typeof availableToppings;
+
+  const totalPrice = calcToppingProductPrice(product, extraToppings.length);
+
+  const handleAddExtra = (key: string) => {
+    if (!extraToppings.includes(key)) {
+      setExtraToppings(prev => [...prev, key]);
+    }
+    setShowExtraSelector(false);
+  };
+
+  const handleRemoveExtra = (key: string) => {
+    setExtraToppings(prev => prev.filter(k => k !== key));
+  };
+
+  const handleAddToCart = () => {
+    if (!mainToppingObj) {
+      toast.error("Selecione um topping!");
+      return;
+    }
+    addKit({
+      category,
+      product,
+      mainTopping: { key: mainToppingObj.key, name: mainToppingObj.name },
+      extraToppings: extraToppingObjs.map(t => ({ key: t.key, name: t.name })),
+    });
+    toast.success("Kit adicionado ao pedido! 🍪", {
+      description: `${product.name} — Topping: ${mainToppingObj.name}${
+        extraToppingObjs.length > 0 ? ` + ${extraToppingObjs.map(t => t.name).join(", ")}` : ""
+      }`,
+    });
+    // Reset extras after adding
+    setExtraToppings([]);
+  };
+
+  return (
+    <li className="relative overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-amber-50/80 via-white to-orange-50/50 p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
+      {/* Badge "Novidade!" */}
+      {product.badge && (
+        <div className="absolute -right-8 top-3 rotate-45 bg-gradient-to-r from-emerald-500 to-emerald-600 px-10 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
+          {product.badge}
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="mb-3 flex items-center gap-3 pr-16">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+          <Gift className="h-5 w-5" />
+        </div>
+        <div>
+          <h4 className="font-display text-lg font-bold text-primary leading-tight">{product.name}</h4>
+          {product.description && (
+            <p className="text-[11px] text-muted-foreground mt-0.5">{product.description}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Topping Principal */}
+      <div className="mb-3">
+        <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          Escolha o sabor do Topping
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {availableToppings.map(t => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setMainTopping(t.key)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                mainTopping === t.key
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "border-border bg-white text-foreground hover:border-primary/50 hover:bg-primary/5"
+              )}
+            >
+              {t.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Toppings Extras */}
+      <div className="mb-4 rounded-lg border border-dashed border-secondary/40 bg-secondary/5 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-secondary-foreground/70">
+            Topping Adicional
+          </span>
+          <span className="text-[10px] font-medium text-muted-foreground">
+            +{formatBRL(product.extraToppingPrice)} cada
+            {product.extraToppingDiscount > 0 && (
+              <span className="ml-1 text-emerald-600">
+                (2º em diante: {formatBRL(product.extraToppingPrice - product.extraToppingDiscount)})
+              </span>
+            )}
+          </span>
+        </div>
+
+        {/* Existing extra toppings */}
+        {extraToppingObjs.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {extraToppingObjs.map((t, idx) => (
+              <span
+                key={t.key}
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
+              >
+                {t.name}
+                <span className="text-[9px] text-muted-foreground">
+                  (+{formatBRL(idx === 0 ? product.extraToppingPrice : product.extraToppingPrice - product.extraToppingDiscount)})
+                </span>
+                <button
+                  onClick={() => handleRemoveExtra(t.key)}
+                  className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Add extra button / selector */}
+        {!showExtraSelector ? (
+          <button
+            onClick={() => setShowExtraSelector(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-dashed border-primary/30 px-3 py-1.5 text-xs font-semibold text-primary/70 hover:bg-primary/5 hover:text-primary hover:border-primary/50 transition-all w-full justify-center"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Adicionar topping extra
+          </button>
+        ) : (
+          <div className="space-y-1.5">
+            <p className="text-[10px] text-muted-foreground font-medium">Escolha um sabor adicional:</p>
+            <div className="flex flex-wrap gap-1.5">
+              {availableToppings
+                .filter(t => t.key !== mainTopping && !extraToppings.includes(t.key))
+                .map(t => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => handleAddExtra(t.key)}
+                    className="rounded-full border border-primary/30 bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              <button
+                onClick={() => setShowExtraSelector(false)}
+                className="rounded-full border border-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-all"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Price + Add to Cart */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-lg font-display font-bold text-primary">
+            {formatBRL(totalPrice)}
+          </span>
+          {extraToppings.length > 0 && (
+            <span className="text-[10px] text-muted-foreground">
+              Base {formatBRL(product.basePrice)} + {extraToppings.length} adicional(is)
+            </span>
+          )}
+        </div>
+        <Button
+          size="sm"
+          onClick={handleAddToCart}
+          disabled={!mainTopping}
+          className="h-9 gap-1.5 rounded-full bg-gradient-to-r from-primary to-amber-700 px-5 font-bold text-primary-foreground shadow-glow hover:brightness-110 transition-all"
+        >
+          <Plus className="h-4 w-4" />
+          Adicionar
+        </Button>
+      </div>
+    </li>
+  );
+}
+
 export function CategoryCard({ category, productionConfig }: Props) {
   const Icon = ICONS[category.slug] ?? Cookie;
   const { add } = useCart();
-  const { flavors } = useMenu();
+  const { flavors, toppingProducts } = useMenu();
   const [selectedSize, setSelectedSize] = useState<string>(
     category.pricing === "per_kg" ? category.sizes![0].label : category.size!,
   );
@@ -51,6 +247,11 @@ export function CategoryCard({ category, productionConfig }: Props) {
       }`,
     });
   };
+
+  // Get topping products for this category
+  const categoryToppingProducts = toppingProducts.filter(
+    tp => tp.categorySlug === category.slug && tp.enabled
+  );
 
   return (
     <SpotlightCard className="flex flex-col">
@@ -95,6 +296,12 @@ export function CategoryCard({ category, productionConfig }: Props) {
 
       {/* Cookie flavor list */}
       <ul className="space-y-2">
+        {/* Topping Products (Kits) */}
+        {categoryToppingProducts.map(tp => (
+          <KitToppingCard key={tp.id} product={tp} category={category} />
+        ))}
+
+        {/* Regular flavors */}
         {[...flavors.filter((f) => {
           const price = category.prices[f.key];
           return price !== undefined && price > 0;

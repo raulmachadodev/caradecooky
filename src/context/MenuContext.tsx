@@ -1,15 +1,18 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Category, Flavor, FLAVORS as BASE_FLAVORS, CATEGORIES as BASE_CATEGORIES } from "@/data/menu";
+import { Category, Flavor, FLAVORS as BASE_FLAVORS, CATEGORIES as BASE_CATEGORIES, ToppingProduct, CustomCategory } from "@/data/menu";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface MenuConfig {
   flavors: Record<string, Flavor>;
   categoryPrices: Record<string, Record<string, number>>;
+  customCategories?: CustomCategory[];
+  toppingProducts?: ToppingProduct[];
 }
 
 interface MenuContextValue {
   flavors: Flavor[];
   categories: Category[];
+  toppingProducts: ToppingProduct[];
   loadingMenu: boolean;
   menuConfig: MenuConfig;
   updateMenuConfig: (newConfig: MenuConfig) => Promise<void>;
@@ -20,7 +23,9 @@ const MenuContext = createContext<MenuContextValue | undefined>(undefined);
 export function MenuProvider({ children }: { children: ReactNode }) {
   const [menuConfig, setMenuConfig] = useState<MenuConfig>({
     flavors: {},
-    categoryPrices: {}
+    categoryPrices: {},
+    customCategories: [],
+    toppingProducts: [],
   });
   const [loadingMenu, setLoadingMenu] = useState(true);
 
@@ -44,6 +49,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     setMenuConfig(newConfig);
     await supabase.from("site_settings").upsert({
       id: "menu_config",
+      key: "menu_config",
       value: newConfig as any
     });
   };
@@ -60,7 +66,8 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     return { ...base, ...override } as Flavor;
   });
 
-  const categories = BASE_CATEGORIES.map(c => {
+  // Merge base categories with overrides
+  const baseCategories = BASE_CATEGORIES.map(c => {
     const overridePrices = (menuConfig.categoryPrices || {})[c.slug] || {};
     return {
       ...c,
@@ -71,8 +78,23 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     };
   });
 
+  // Add custom categories created via admin
+  const customCategories: Category[] = (menuConfig.customCategories || []).map(cc => {
+    const overridePrices = (menuConfig.categoryPrices || {})[cc.slug] || {};
+    return {
+      ...cc,
+      prices: { ...overridePrices },
+      isCustom: true,
+    };
+  });
+
+  const categories = [...baseCategories, ...customCategories];
+
+  // Topping products from config
+  const toppingProducts = menuConfig.toppingProducts || [];
+
   return (
-    <MenuContext.Provider value={{ flavors, categories, loadingMenu, menuConfig, updateMenuConfig }}>
+    <MenuContext.Provider value={{ flavors, categories, toppingProducts, loadingMenu, menuConfig, updateMenuConfig }}>
       {children}
     </MenuContext.Provider>
   );

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
-import { Category, FlavorKey, calcUnitPrice, formatBRL } from "@/data/menu";
+import { Category, FlavorKey, calcUnitPrice, calcToppingProductPrice, formatBRL, ToppingProduct } from "@/data/menu";
 
 export interface CartItem {
   id: string;
@@ -12,6 +12,13 @@ export interface CartItem {
   premium: boolean;
   unitPrice: number;
   quantity: number;
+  /** Dados de topping para itens de kit */
+  isKit?: boolean;
+  kitProductId?: string;
+  kitProductName?: string;
+  mainTopping?: string;
+  mainToppingName?: string;
+  extraToppings?: { key: string; name: string }[];
 }
 
 interface CartContextValue {
@@ -26,6 +33,12 @@ interface CartContextValue {
     premium: boolean;
     size: string;
     grams?: number;
+  }) => void;
+  addKit: (input: {
+    category: Category;
+    product: ToppingProduct;
+    mainTopping: { key: string; name: string };
+    extraToppings: { key: string; name: string }[];
   }) => void;
   updateQty: (id: string, qty: number) => void;
   remove: (id: string) => void;
@@ -85,6 +98,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
               premium,
               unitPrice,
               quantity: 1,
+            },
+          ];
+        });
+      },
+      addKit: ({ category, product, mainTopping, extraToppings }) => {
+        const unitPrice = calcToppingProductPrice(product, extraToppings.length);
+        const allToppings = [mainTopping.key, ...extraToppings.map(t => t.key)].sort().join("+");
+        const id = `kit__${product.id}__${allToppings}`;
+        
+        setItems((prev) => {
+          const existing = prev.find((i) => i.id === id);
+          if (existing) {
+            return prev.map((i) => (i.id === id ? { ...i, quantity: i.quantity + 1 } : i));
+          }
+          return [
+            ...prev,
+            {
+              id,
+              categorySlug: category.slug,
+              categoryName: category.name,
+              size: "Kit",
+              flavor: mainTopping.key,
+              flavorName: mainTopping.name,
+              premium: false,
+              unitPrice,
+              quantity: 1,
+              isKit: true,
+              kitProductId: product.id,
+              kitProductName: product.name,
+              mainTopping: mainTopping.key,
+              mainToppingName: mainTopping.name,
+              extraToppings,
             },
           ];
         });

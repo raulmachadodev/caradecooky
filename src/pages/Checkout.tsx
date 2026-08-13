@@ -132,7 +132,7 @@ const Checkout = () => {
     }
   };
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setAddress(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 

@@ -1,6 +1,7 @@
 // Catálogo da Cara de Cooky Gourmet — extraído do cardápio oficial.
 
-export type FlavorKey = "nutella" | "rafaello" | "pistache" | "cappuccino" | "kinder" | "moca_brigadeiro" | "buenotella" | "mini_bola";
+// FlavorKey agora é string para suportar sabores dinâmicos criados pelo admin
+export type FlavorKey = string;
 
 export interface Flavor {
   key: FlavorKey;
@@ -29,8 +30,45 @@ export interface Category {
   /** opções de tamanho (apenas quando per_kg) */
   sizes?: CategorySize[];
   /** preços por sabor (em reais). Quando per_kg, é o preço/kg */
-  prices: Record<FlavorKey, number>;
-  unavailableFlavors?: FlavorKey[];
+  prices: Record<string, number>;
+  unavailableFlavors?: string[];
+  /** flag para categorias criadas pelo admin */
+  isCustom?: boolean;
+}
+
+/** Produto especial com seleção de toppings (ex: Kit 7 Mini-Cookies + Topping) */
+export interface ToppingOption {
+  key: string;
+  name: string;
+  available: boolean;
+}
+
+export interface ToppingProduct {
+  id: string;
+  name: string;
+  badge?: string;
+  description?: string;
+  /** slug da categoria onde este produto aparece */
+  categorySlug: string;
+  /** preço base do kit (inclui 1 topping) */
+  basePrice: number;
+  /** preço do 1° topping adicional */
+  extraToppingPrice: number;
+  /** desconto por topping adicional a partir do 2° extra */
+  extraToppingDiscount: number;
+  /** toppings disponíveis */
+  toppings: ToppingOption[];
+  enabled: boolean;
+}
+
+/** Categoria criada pelo admin */
+export interface CustomCategory {
+  slug: string;
+  name: string;
+  tagline: string;
+  pricing: "fixed" | "per_kg";
+  size?: string;
+  sizes?: CategorySize[];
 }
 
 export const FLAVORS: Flavor[] = [
@@ -51,7 +89,7 @@ export const CATEGORIES: Category[] = [
     tagline: "O clássico recheado.",
     pricing: "fixed",
     size: "100g",
-    prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0, mini_bola: 9.90 },
+    prices: { nutella: 15.0, rafaello: 0, pistache: 0, cappuccino: 0, kinder: 0, moca_brigadeiro: 0, buenotella: 0, mini_bola: 9.90 } as Record<string, number>,
   },
   {
     slug: "marmita-200g",
@@ -59,7 +97,7 @@ export const CATEGORIES: Category[] = [
     tagline: "Massa de cookie + recheio cremoso. Pra dividir... ou não.",
     pricing: "fixed",
     size: "Pequena",
-    prices: { nutella: 18.5, rafaello: 27.0, pistache: 18.0, cappuccino: 17.0, kinder: 30.0, moca_brigadeiro: 16.50, buenotella: 25.0, mini_bola: 0 },
+    prices: { nutella: 18.5, rafaello: 27.0, pistache: 18.0, cappuccino: 17.0, kinder: 30.0, moca_brigadeiro: 16.50, buenotella: 25.0, mini_bola: 0 } as Record<string, number>,
     unavailableFlavors: ["cappuccino", "moca_brigadeiro"],
   },
   {
@@ -68,7 +106,7 @@ export const CATEGORIES: Category[] = [
     tagline: "Versão família — pura indulgência.",
     pricing: "fixed",
     size: "Grande",
-    prices: { nutella: 25.0, rafaello: 37.0, pistache: 20.0, cappuccino: 19.0, kinder: 42.0, moca_brigadeiro: 19.90, buenotella: 35.0, mini_bola: 0 },
+    prices: { nutella: 25.0, rafaello: 37.0, pistache: 20.0, cappuccino: 19.0, kinder: 42.0, moca_brigadeiro: 19.90, buenotella: 35.0, mini_bola: 0 } as Record<string, number>,
     unavailableFlavors: ["cappuccino", "moca_brigadeiro"],
   },
   {
@@ -81,7 +119,7 @@ export const CATEGORIES: Category[] = [
       { label: "1kg", grams: 1000 },
       { label: "1,5kg", grams: 1500 },
     ],
-    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0, buenotella: 180.0, mini_bola: 0 },
+    prices: { nutella: 120.0, rafaello: 190.0, pistache: 100.0, cappuccino: 100.0, kinder: 230.0, moca_brigadeiro: 0, buenotella: 180.0, mini_bola: 0 } as Record<string, number>,
     unavailableFlavors: ["cappuccino", "kinder"],
   },
 ];
@@ -93,16 +131,25 @@ export function getCategory(slug: string) {
   return CATEGORIES.find((c) => c.slug === slug);
 }
 
-export function getFlavor(key: FlavorKey) {
+export function getFlavor(key: string) {
   return FLAVORS.find((f) => f.key === key)!;
 }
 
 /** Calcula o preço unitário considerando tamanho (caso per_kg). */
-export function calcUnitPrice(category: Category, flavor: FlavorKey, grams?: number) {
-  const base = category.prices[flavor];
+export function calcUnitPrice(category: Category, flavor: string, grams?: number) {
+  const base = category.prices[flavor] ?? 0;
   if (category.pricing === "per_kg") {
     if (!grams) return 0;
     return (base * grams) / 1000;
   }
   return base;
+}
+
+/** Calcula o preço total de um Kit com toppings */
+export function calcToppingProductPrice(product: ToppingProduct, extraToppingsCount: number): number {
+  if (extraToppingsCount <= 0) return product.basePrice;
+  // 1° adicional: preço cheio, 2° em diante: preço com desconto
+  const firstExtra = product.extraToppingPrice;
+  const remainingExtras = Math.max(0, extraToppingsCount - 1) * (product.extraToppingPrice - product.extraToppingDiscount);
+  return product.basePrice + firstExtra + remainingExtras;
 }
