@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Category, Flavor, FLAVORS as BASE_FLAVORS, CATEGORIES as BASE_CATEGORIES, ToppingProduct, CustomCategory } from "@/data/menu";
+import { Category, Flavor, FLAVORS as BASE_FLAVORS, CATEGORIES as BASE_CATEGORIES, ToppingProduct, CustomCategory, BASE_TOPPING_PRODUCTS } from "@/data/menu";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface MenuConfig {
@@ -90,8 +90,17 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 
   const categories = [...baseCategories, ...customCategories];
 
-  // Topping products from config
-  const toppingProducts = menuConfig.toppingProducts || [];
+  // Merge base topping products with custom ones from config
+  const configToppingProducts = menuConfig.toppingProducts || [];
+  const baseToppingProductsOverridden = BASE_TOPPING_PRODUCTS.map(baseTp => {
+    const override = configToppingProducts.find(c => c.id === baseTp.id);
+    return override || baseTp;
+  });
+  
+  // Also include any custom topping products that were created purely in admin
+  const customOnlyToppingProducts = configToppingProducts.filter(c => !BASE_TOPPING_PRODUCTS.some(b => b.id === c.id));
+  
+  const toppingProducts = [...baseToppingProductsOverridden, ...customOnlyToppingProducts];
 
   return (
     <MenuContext.Provider value={{ flavors, categories, toppingProducts, loadingMenu, menuConfig, updateMenuConfig }}>

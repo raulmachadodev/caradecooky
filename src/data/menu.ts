@@ -124,6 +124,26 @@ export const CATEGORIES: Category[] = [
   },
 ];
 
+export const BASE_TOPPING_PRODUCTS: ToppingProduct[] = [
+  {
+    id: "kit-7-mini-cookies-topping",
+    name: "Kit 7 mini-cookies + Topping",
+    badge: "Novidade!",
+    description: "Escolha o sabor do seu topping (o 1º está incluso no kit). Adicionais saem por R$ 7,00 (a partir do 2º adicional, desconto de R$ 2,00).",
+    categorySlug: "bola-cookie",
+    basePrice: 30.0,
+    extraToppingPrice: 7.0,
+    extraToppingDiscount: 2.0,
+    enabled: true,
+    toppings: [
+      { key: "nutella", name: "Nutella", available: true },
+      { key: "kinder_bueno_white", name: "Kinder Bueno White", available: true },
+      { key: "pistache", name: "Pistache", available: true },
+      { key: "chocolate_amargo", name: "Chocolate Amargo", available: true },
+    ],
+  }
+];
+
 export const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
