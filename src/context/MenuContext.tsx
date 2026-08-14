@@ -63,7 +63,11 @@ export function MenuProvider({ children }: { children: ReactNode }) {
   const flavors = Array.from(allFlavorKeys).map(key => {
     const base = BASE_FLAVORS.find(f => f.key === key) || { key, name: "Novo Sabor" };
     const override = (menuConfig.flavors || {})[key] || {};
-    return { ...base, ...override } as Flavor;
+    const merged = { ...base, ...override } as Flavor;
+    if (key === "mini_bola" || (merged.name && merged.name.toLowerCase().includes("mini"))) {
+      delete merged.badge;
+    }
+    return merged;
   });
 
   // Merge base categories with overrides

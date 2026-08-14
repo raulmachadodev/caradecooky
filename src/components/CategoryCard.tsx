@@ -75,7 +75,7 @@ function KitToppingCard({ product, category }: { product: ToppingProduct; catego
     <li className="relative overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-amber-50/80 via-white to-orange-50/50 p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
       {/* Badge "Novidade!" */}
       {product.badge && (
-        <div className="absolute -right-9 top-3.5 w-36 rotate-45 bg-gradient-to-r from-emerald-500 to-emerald-600 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-white shadow-md flex items-center justify-center">
+        <div className="absolute -right-[46px] top-3.5 w-36 rotate-45 bg-gradient-to-r from-emerald-500 to-emerald-600 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-white shadow-md flex items-center justify-center">
           {product.badge}
         </div>
       )}
@@ -326,7 +326,7 @@ export function CategoryCard({ category, productionConfig }: Props) {
                     Premium
                   </span>
                 )}
-                {f.badge && (
+                {f.badge && f.key !== "mini_bola" && !f.name.toLowerCase().includes("mini") && (
                   <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                     {f.badge}
                   </span>
