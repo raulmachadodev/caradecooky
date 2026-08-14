@@ -437,11 +437,11 @@ const Admin = () => {
     setIsSavingConfig(true);
     const { error: e1 } = await supabase
       .from("site_settings")
-      .upsert({ id: "delivery_config", key: "delivery_config", value: deliveryConfig as any });
+      .upsert({ id: "delivery_config", value: deliveryConfig as any });
     
     const { error: e2 } = await supabase
       .from("site_settings")
-      .upsert({ id: "production_config", key: "production_config", value: productionConfig as any });
+      .upsert({ id: "production_config", value: productionConfig as any });
     
     setIsSavingConfig(false);
     if (e1 || e2) {

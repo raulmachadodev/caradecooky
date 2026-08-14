@@ -49,7 +49,6 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     setMenuConfig(newConfig);
     await supabase.from("site_settings").upsert({
       id: "menu_config",
-      key: "menu_config",
       value: newConfig as any
     });
   };
