@@ -129,11 +129,11 @@ export const BASE_TOPPING_PRODUCTS: ToppingProduct[] = [
     id: "kit-7-mini-cookies-topping",
     name: "Kit 7 mini-cookies + Topping",
     badge: "Novidade!",
-    description: "Escolha o sabor do seu topping (o 1º está incluso no kit). Adicionais saem por R$ 7,00 (a partir do 2º adicional, desconto de R$ 2,00).",
+    description: "Escolha o sabor do seu topping (o 1º está incluso no kit). Toppings adicionais saem por R$ 7,00 cada.",
     categorySlug: "bola-cookie",
     basePrice: 30.0,
     extraToppingPrice: 7.0,
-    extraToppingDiscount: 2.0,
+    extraToppingDiscount: 0.0,
     enabled: true,
     toppings: [
       { key: "nutella", name: "Nutella", available: true },

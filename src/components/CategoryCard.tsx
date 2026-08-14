@@ -75,14 +75,14 @@ function KitToppingCard({ product, category }: { product: ToppingProduct; catego
     <li className="relative overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-amber-50/80 via-white to-orange-50/50 p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
       {/* Badge "Novidade!" */}
       {product.badge && (
-        <div className="absolute -right-8 top-3 rotate-45 bg-gradient-to-r from-emerald-500 to-emerald-600 px-10 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
+        <div className="absolute -right-9 top-3.5 rotate-45 bg-gradient-to-r from-emerald-500 to-emerald-600 px-12 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
           {product.badge}
         </div>
       )}
 
       {/* Header */}
       <div className="mb-3 flex items-center gap-3 pr-16">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-gold text-primary shadow-soft">
           <Gift className="h-5 w-5" />
         </div>
         <div>
@@ -123,10 +123,10 @@ function KitToppingCard({ product, category }: { product: ToppingProduct; catego
           <span className="text-[10px] font-bold uppercase tracking-widest text-secondary-foreground/70">
             Topping Adicional
           </span>
-          <span className="text-[10px] font-medium text-muted-foreground">
+          <span className="text-[10px] font-medium text-emerald-600">
             +{formatBRL(product.extraToppingPrice)} cada
             {product.extraToppingDiscount > 0 && (
-              <span className="ml-1 text-emerald-600">
+              <span className="ml-1 text-emerald-700">
                 (2º em diante: {formatBRL(product.extraToppingPrice - product.extraToppingDiscount)})
               </span>
             )}
