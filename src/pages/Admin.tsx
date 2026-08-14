@@ -614,8 +614,9 @@ const Admin = () => {
       enabled: editingTopping.enabled,
     };
 
-    const currentProducts = menuConfig.toppingProducts || [];
-    const newProducts = editingTopping.isNew
+    const currentProducts = toppingProducts;
+    const existsInCurrent = currentProducts.some(p => p.id === id);
+    const newProducts = (editingTopping.isNew || !existsInCurrent)
       ? [...currentProducts, newProduct]
       : currentProducts.map(p => p.id === id ? newProduct : p);
 
@@ -626,7 +627,7 @@ const Admin = () => {
   }
 
   async function deleteTopping(id: string) {
-    const newProducts = (menuConfig.toppingProducts || []).filter(p => p.id !== id);
+    const newProducts = toppingProducts.filter(p => p.id !== id);
     await updateMenuConfig({ ...menuConfig, toppingProducts: newProducts });
     toast.success("Produto removido!");
   }
@@ -1017,10 +1018,10 @@ const Admin = () => {
                           </Button>
                         </div>
                         <div className="space-y-2">
-                          {(menuConfig.toppingProducts || []).length === 0 ? (
+                          {toppingProducts.length === 0 ? (
                             <p className="text-xs text-muted-foreground italic bg-muted/30 p-3 rounded-lg text-center">Nenhum produto tipo kit cadastrado.</p>
                           ) : (
-                            (menuConfig.toppingProducts || []).map((prod) => (
+                            toppingProducts.map((prod) => (
                               <div key={prod.id} className={cn("flex flex-col rounded-xl border border-border/50 p-3 gap-3 transition-colors", prod.enabled ? "bg-card/50" : "bg-muted/30 opacity-70")}>
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1 min-w-0">

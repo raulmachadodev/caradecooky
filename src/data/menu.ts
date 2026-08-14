@@ -79,7 +79,7 @@ export const FLAVORS: Flavor[] = [
   { key: "cappuccino", name: "Dark Cappuccino", description: "Massa dark crocante por fora e macia por dentro, com cacau 100%." },
   { key: "kinder", name: "Kinder", premium: true, description: "Massa tradicional crocante por fora e macia por dentro, com gotas de chocolate nobre meio amargo, decorado com granulados e Kinder por cima." },
   { key: "buenotella", name: "Buenotella", premium: true, description: "Massa crocante por fora e macia por dentro." },
-  { key: "mini_bola", name: "Mini (5 unidades)", badge: "Valor promocional de lançamento", description: "Massa crocante por fora e macia por dentro." },
+  { key: "mini_bola", name: "Mini (5 unidades)", description: "Massa crocante por fora e macia por dentro." },
 ];
 
 export const CATEGORIES: Category[] = [
@@ -139,7 +139,7 @@ export const BASE_TOPPING_PRODUCTS: ToppingProduct[] = [
       { key: "nutella", name: "Nutella", available: true },
       { key: "kinder_bueno_white", name: "Kinder Bueno White", available: true },
       { key: "pistache", name: "Pistache", available: true },
-      { key: "chocolate_amargo", name: "Chocolate Amargo", available: true },
+      { key: "chocolate_amargo", name: "Chocolate Meio Amargo", available: true },
     ],
   }
 ];

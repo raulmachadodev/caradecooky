@@ -75,7 +75,7 @@ function KitToppingCard({ product, category }: { product: ToppingProduct; catego
     <li className="relative overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-amber-50/80 via-white to-orange-50/50 p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
       {/* Badge "Novidade!" */}
       {product.badge && (
-        <div className="absolute -right-9 top-3.5 rotate-45 bg-gradient-to-r from-emerald-500 to-emerald-600 px-12 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
+        <div className="absolute -right-9 top-3.5 w-36 rotate-45 bg-gradient-to-r from-emerald-500 to-emerald-600 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-white shadow-md flex items-center justify-center">
           {product.badge}
         </div>
       )}
