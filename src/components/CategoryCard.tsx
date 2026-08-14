@@ -41,14 +41,12 @@ function KitToppingCard({ product, category }: { product: ToppingProduct; catego
   const totalPrice = calcToppingProductPrice(product, extraToppings.length);
 
   const handleAddExtra = (key: string) => {
-    if (!extraToppings.includes(key)) {
-      setExtraToppings(prev => [...prev, key]);
-    }
+    setExtraToppings(prev => [...prev, key]);
     setShowExtraSelector(false);
   };
 
-  const handleRemoveExtra = (key: string) => {
-    setExtraToppings(prev => prev.filter(k => k !== key));
+  const handleRemoveExtra = (indexToRemove: number) => {
+    setExtraToppings(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const handleAddToCart = () => {
@@ -138,7 +136,7 @@ function KitToppingCard({ product, category }: { product: ToppingProduct; catego
           <div className="flex flex-wrap gap-1.5 mb-2">
             {extraToppingObjs.map((t, idx) => (
               <span
-                key={t.key}
+                key={`${t.key}-${idx}`}
                 className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
               >
                 {t.name}
@@ -146,7 +144,7 @@ function KitToppingCard({ product, category }: { product: ToppingProduct; catego
                   (+{formatBRL(idx === 0 ? product.extraToppingPrice : product.extraToppingPrice - product.extraToppingDiscount)})
                 </span>
                 <button
-                  onClick={() => handleRemoveExtra(t.key)}
+                  onClick={() => handleRemoveExtra(idx)}
                   className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors"
                 >
                   <X className="h-3 w-3" />
@@ -169,18 +167,16 @@ function KitToppingCard({ product, category }: { product: ToppingProduct; catego
           <div className="space-y-1.5">
             <p className="text-[10px] text-muted-foreground font-medium">Escolha um sabor adicional:</p>
             <div className="flex flex-wrap gap-1.5">
-              {availableToppings
-                .filter(t => t.key !== mainTopping && !extraToppings.includes(t.key))
-                .map(t => (
-                  <button
-                    key={t.key}
-                    type="button"
-                    onClick={() => handleAddExtra(t.key)}
-                    className="rounded-full border border-primary/30 bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all"
-                  >
-                    {t.name}
-                  </button>
-                ))}
+              {availableToppings.map(t => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => handleAddExtra(t.key)}
+                  className="rounded-full border border-primary/30 bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                >
+                  {t.name}
+                </button>
+              ))}
               <button
                 onClick={() => setShowExtraSelector(false)}
                 className="rounded-full border border-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-all"
